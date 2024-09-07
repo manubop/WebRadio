@@ -267,6 +267,36 @@ namespace WebRadio.ViewModels
             }
         }
 
+        public void PlayPauseItem()
+        {
+            if (IsItemPlaying)
+            {
+                StopItem();
+            }
+            else
+            {
+                PlayItem();
+            }
+        }
+
+        public void PlayPrevItem()
+        {
+            if (SelectedIndex > 0)
+            {
+                SelectedIndex--;
+                PlayItem();
+            }
+        }
+
+        public void PlayNextItem()
+        {
+            if (SelectedIndex < Model.Count - 1)
+            {
+                SelectedIndex++;
+                PlayItem();
+            }
+        }
+
         private IStream? CreateStream(string url, Options options)
         {
             _logger.LogDebug("Opening {Url}", url);

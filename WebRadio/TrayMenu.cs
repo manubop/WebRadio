@@ -32,19 +32,17 @@ namespace WebRadio
 
         private void PrevCommand()
         {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow?.DataContext is MainWindowViewModel vm && vm.Stations.SelectedIndex > 0)
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow?.DataContext is MainWindowViewModel vm)
             {
-                vm.Stations.SelectedIndex--;
-                vm.Stations.PlayItem();
+                vm.Stations.PlayPrevItem();
             }
         }
 
         private void NextCommand()
         {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow?.DataContext is MainWindowViewModel vm && vm.Stations.SelectedIndex < vm.Stations.Stations.Count - 1)
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow?.DataContext is MainWindowViewModel vm)
             {
-                vm.Stations.SelectedIndex++;
-                vm.Stations.PlayItem();
+                vm.Stations.PlayNextItem();
             }
         }
 
