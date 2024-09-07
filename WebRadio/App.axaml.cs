@@ -1,12 +1,14 @@
 using System;
 using System.IO;
+using System.Reactive.Linq;
 using System.Text.Json;
 
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Input;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
+
+using GlobalHotKeys.Native.Types;
 
 using Microsoft.Extensions.Logging;
 
@@ -101,6 +103,46 @@ namespace WebRadio
 
                 desktop.Startup += OnStartup;
                 desktop.Exit += OnExit;
+
+                var hotKeyManager = new GlobalHotKeys.HotKeyManager();
+                var hotKeys = new[]
+                {
+                    hotKeyManager.Register(VirtualKeyCode.VK_MEDIA_PLAY_PAUSE, 0),
+                    hotKeyManager.Register(VirtualKeyCode.VK_MEDIA_PREV_TRACK, 0),
+                    hotKeyManager.Register(VirtualKeyCode.VK_MEDIA_NEXT_TRACK, 0),
+                };
+
+                var context = AvaloniaSynchronizationContext.Current;
+
+                if (context != null)
+                {
+                    hotKeyManager.HotKeyPressed
+                      .ObserveOn(context)
+                      .Subscribe(hotKey =>
+                      {
+                          switch (hotKey.Key)
+                          {
+                              case VirtualKeyCode.VK_MEDIA_PLAY_PAUSE:
+                                  vm.Stations.PlayPauseItem();
+                                  break;
+                              case VirtualKeyCode.VK_MEDIA_PREV_TRACK:
+                                  vm.Stations.PlayPrevItem();
+                                  break;
+                              case VirtualKeyCode.VK_MEDIA_NEXT_TRACK:
+                                  vm.Stations.PlayNextItem();
+                                  break;
+                          }
+                      });
+                }
+
+                desktop.Exit += (sender, args) =>
+                {
+                    foreach (var hotKey in hotKeys)
+                    {
+                        hotKey.Dispose();
+                    }
+                    hotKeyManager.Dispose();
+                };
             }
 
             base.OnFrameworkInitializationCompleted();
