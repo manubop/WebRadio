@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:WebRadio.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="WebRadio.Views.StationsView"
+			 x:DataType="vm:StationsViewModel"
+			 xmlns:local="clr-namespace:WebRadio;assembly=WebRadio">
+	<DockPanel>
+		<WrapPanel DockPanel.Dock="Bottom"
+				HorizontalAlignment="Stretch">
+			<Button x:CompileBindings="False"
+					Command="{Binding $parent[Window].DataContext.AddItem}">
+				Add
+			</Button>
+			<Button x:CompileBindings="False"
+					Command="{Binding $parent[Window].DataContext.RemoveItem}" IsEnabled="{Binding IsItemSelected}">
+				Remove
+			</Button>
+			<Button x:CompileBindings="False"
+					Command="{Binding $parent[Window].DataContext.EditItem}" IsEnabled="{Binding IsItemSelected}">
+				Edit
+			</Button>
+			<Button x:CompileBindings="False"
+					Command="{Binding PlayItem}" IsEnabled="{Binding IsItemSelected}">
+				Play
+			</Button>
+			<Button x:CompileBindings="False"
+					Command="{Binding StopItem}" IsEnabled="{Binding IsItemPlaying}">
+				Stop
+			</Button>
+		</WrapPanel>
+		<Slider DockPanel.Dock="Top" Maximum="1" Value="{Binding Volume}" Margin="10,0,10,0"/>
+		<ListBox ItemsSource="{Binding Stations}" SelectedIndex="{Binding SelectedIndex}" DoubleTapped="DoubleTappedHandler">
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<TextBlock Text="{Binding Concat}"/>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
+	</DockPanel>
+</UserControl>
+ 

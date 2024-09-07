@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:vm="using:WebRadio.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="WebRadio.Views.AddStationView"
+			 x:DataType="vm:AddStationViewModel">
+	<DockPanel>
+		<WrapPanel DockPanel.Dock="Bottom">
+			<Button Command="{Binding OkCommand}">OK</Button>
+			<Button Command="{Binding CancelCommand}">Cancel</Button>
+		</WrapPanel>
+		<TextBox DockPanel.Dock="Top"
+				 AcceptsReturn="False"
+				 Text="{Binding Name}"
+				 Watermark="Enter the name of the station"
+				 Name="NameTextBox"
+				 ScrollViewer.HorizontalScrollBarVisibility="Hidden"/>
+		<TextBox DockPanel.Dock="Top"
+				 AcceptsReturn="False"
+				 Text="{Binding Url}"
+				 Watermark="Enter the url of the station"
+				 ScrollViewer.HorizontalScrollBarVisibility="Hidden"/>
+		<TextBox DockPanel.Dock="Bottom"
+				 AcceptsReturn="True"
+				 Text="{Binding Api}"
+				 Watermark="Enter an api url"
+				 ScrollViewer.HorizontalScrollBarVisibility="Hidden"/>
+		<TextBox
+				 AcceptsReturn="True"
+				 Text="{Binding Description}"
+				 Watermark="Enter a description"/>
+	</DockPanel>
+</UserControl>
