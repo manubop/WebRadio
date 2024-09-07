@@ -32,7 +32,7 @@
 			</Button>
 		</WrapPanel>
 		<Slider DockPanel.Dock="Top" Maximum="1" Value="{Binding Volume}" Margin="10,0,10,0"/>
-		<ListBox ItemsSource="{Binding Stations}" SelectedIndex="{Binding SelectedIndex}" DoubleTapped="DoubleTappedHandler">
+		<ListBox ItemsSource="{Binding Model}" SelectedIndex="{Binding SelectedIndex}" DoubleTapped="DoubleTappedHandler">
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<TextBlock Text="{Binding Concat}"/>

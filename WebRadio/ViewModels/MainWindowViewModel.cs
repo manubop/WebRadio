@@ -52,27 +52,27 @@ namespace WebRadio.ViewModels
         {
             AddOrEditItem(station =>
             {
-                Stations.Stations.Add(station);
+                Stations.Model.Add(station);
 
-                Stations.SelectedIndex = Stations.Stations.Count - 1;
+                Stations.SelectedIndex = Stations.Model.Count - 1;
             });
         }
 
         public void RemoveItem()
         {
-            Stations.Stations.RemoveAt(Stations.SelectedIndex);
+            Stations.Model.RemoveAt(Stations.SelectedIndex);
         }
 
         public void EditItem()
         {
-            var current = Stations.Stations[Stations.SelectedIndex];
+            var current = Stations.Model[Stations.SelectedIndex];
 
             AddOrEditItem(
                 station =>
                 {
                     var selectedIndex = Stations.SelectedIndex;
 
-                    Stations.Stations[Stations.SelectedIndex] = station;
+                    Stations.Model[Stations.SelectedIndex] = station;
 
                     Stations.SelectedIndex = selectedIndex;
                 },

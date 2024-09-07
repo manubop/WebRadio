@@ -41,11 +41,11 @@ namespace WebRadio.ViewModels
 
         public StationsViewModel(IStationService service, Options options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory)
         {
-            Stations = new(service.Load().Select(s => new StationModel(s)));
+            Model = new(service.Load().Select(s => new StationModel(s)));
 
-            Stations.CollectionChanged += (_, _) =>
+            Model.CollectionChanged += (_, _) =>
             {
-                service.Store(Stations);
+                service.Store(Model);
             };
 
             this.WhenAnyValue(x => x.Volume).Subscribe(volume => _stream?.SetAttribute(BASSAttribute.BASS_ATTRIB_VOL, volume));
@@ -55,7 +55,7 @@ namespace WebRadio.ViewModels
             _songDownloaderFactory = songDownloaderFactory;
         }
 
-        public ObservableCollection<StationModel> Stations { get; }
+        public ObservableCollection<StationModel> Model { get; }
 
         float _volume = 1;
 
@@ -79,7 +79,7 @@ namespace WebRadio.ViewModels
             }
         }
 
-        public StationModel SelectedStation => Stations[SelectedIndex];
+        public StationModel SelectedStation => Model[SelectedIndex];
 
         int _selectedIndex;
 
@@ -173,7 +173,7 @@ namespace WebRadio.ViewModels
 
             StopItem();
 
-            var station = Stations[SelectedIndex];
+            var station = Model[SelectedIndex];
 
             station.Append = $"\u25B6 Buffering...";
 
@@ -255,7 +255,7 @@ namespace WebRadio.ViewModels
                 _downloader?.Dispose();
                 _downloader = null;
 
-                var station = Stations[PlayingIndex];
+                var station = Model[PlayingIndex];
 
                 station.Append = string.Empty;
 
