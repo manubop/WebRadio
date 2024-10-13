@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
 
@@ -104,48 +106,42 @@ namespace WebRadio
                 desktop.Startup += OnStartup;
                 desktop.Exit += OnExit;
 
-                var hotKeyManager = new GlobalHotKeys.HotKeyManager();
-                var hotKeys = new[]
-                {
-                    hotKeyManager.Register(VirtualKeyCode.VK_MEDIA_PLAY_PAUSE, 0),
-                    hotKeyManager.Register(VirtualKeyCode.VK_MEDIA_PREV_TRACK, 0),
-                    hotKeyManager.Register(VirtualKeyCode.VK_MEDIA_NEXT_TRACK, 0),
-                };
-
-                var context = AvaloniaSynchronizationContext.Current;
-
-                if (context != null)
-                {
-                    hotKeyManager.HotKeyPressed
-                      .ObserveOn(context)
-                      .Subscribe(hotKey =>
-                      {
-                          switch (hotKey.Key)
-                          {
-                              case VirtualKeyCode.VK_MEDIA_PLAY_PAUSE:
-                                  vm.Stations.PlayPauseItem();
-                                  break;
-                              case VirtualKeyCode.VK_MEDIA_PREV_TRACK:
-                                  vm.Stations.PlayPrevItem();
-                                  break;
-                              case VirtualKeyCode.VK_MEDIA_NEXT_TRACK:
-                                  vm.Stations.PlayNextItem();
-                                  break;
-                          }
-                      });
-                }
-
-                desktop.Exit += (sender, args) =>
-                {
-                    foreach (var hotKey in hotKeys)
-                    {
-                        hotKey.Dispose();
-                    }
-                    hotKeyManager.Dispose();
-                };
+                SetupHotKeys(desktop, new Dictionary<VirtualKeyCode, Action> {
+                    { VirtualKeyCode.VK_MEDIA_PLAY_PAUSE, () => vm.Stations.PlayPauseItem() },
+                    { VirtualKeyCode.VK_MEDIA_PREV_TRACK, () => vm.Stations.PlayPrevItem() },
+                    { VirtualKeyCode.VK_MEDIA_NEXT_TRACK, () => vm.Stations.PlayNextItem() },
+                });
             }
 
             base.OnFrameworkInitializationCompleted();
+        }
+
+        private static void SetupHotKeys(IClassicDesktopStyleApplicationLifetime desktop, IDictionary<VirtualKeyCode, Action> hotKeyActions)
+        {
+            var context = AvaloniaSynchronizationContext.Current;
+
+            if (context == null)
+            {
+                return;
+            }
+
+            var hotKeyManager = new GlobalHotKeys.HotKeyManager();
+
+            hotKeyManager.HotKeyPressed
+                .ObserveOn(context)
+                .Subscribe(hotKey => hotKeyActions[hotKey.Key].Invoke());
+
+            var hotKeys = hotKeyActions.Keys.Select(key => hotKeyManager.Register(key, 0)).ToList();
+
+            desktop.Exit += (sender, args) =>
+            {
+                foreach (var hotKey in hotKeys)
+                {
+                    hotKey.Dispose();
+                }
+
+                hotKeyManager.Dispose();
+            };
         }
 
         private void OnStartup(object? sender, ControlledApplicationLifetimeStartupEventArgs e)
