@@ -278,17 +278,21 @@ namespace WebRadio
 
         private void OnStartup(object? sender, ControlledApplicationLifetimeStartupEventArgs e)
         {
-            if (Un4seen.Bass.Utils.HighWord(Bass.BASS_GetVersion()) != Bass.BASSVERSION)
+            var bassVersion = Bass.BASS_GetVersion();
+
+            if (Un4seen.Bass.Utils.HighWord(bassVersion) != Bass.BASSVERSION)
             {
-                logger.LogError("Wrong Bass Version!");
+                logger.LogError("Unsupported BASS version: 0x{BassVersion:X8}", bassVersion);
                 Environment.Exit(1);
             }
+
+            logger.LogInformation("Loaded BASS version: 0x{BassVersion:X8}", bassVersion);
 
             Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_NET_PLAYLIST, 1);
 
             if (!Bass.BASS_Init(-1, 44100, BASSInit.BASS_DEVICE_DEFAULT, -1))
             {
-                logger.LogError("Could not initialize BASS");
+                logger.LogError("Could not initialize BASS: {ErrorCode}", Bass.BASS_ErrorGetCode());
                 Environment.Exit(1);
             }
 
