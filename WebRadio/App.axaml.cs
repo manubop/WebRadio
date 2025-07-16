@@ -15,6 +15,7 @@ using Avalonia.Threading;
 using GlobalHotKeys.Native.Types;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Uwp.Notifications;
 
 using ReactiveUI;
 
@@ -69,6 +70,16 @@ namespace WebRadio
 
                             mw.Title = songInfo.IsEmpty() ? vm.Stations.LastPlayedStation.Name : songInfo.Artist + " / " + songInfo.Title;
 
+                            if (!songInfo.IsEmpty())
+                            {
+                                new ToastContentBuilder()
+                                    .AddArgument("artist", songInfo.Artist)
+                                    .AddArgument("track", songInfo.Title)
+                                    .AddText(songInfo.Artist + " / " + songInfo.Title)
+                                    .AddText(vm.Stations.LastPlayedStation.Name)
+                                    .AddAudio(new ToastAudio { Silent = true })
+                                    .Show();
+                            }
                         }
                         else
                         {
@@ -81,6 +92,20 @@ namespace WebRadio
 
                 if (topLevel != null)
                 {
+                    var launcher = topLevel.Launcher;
+
+                    if (launcher != null)
+                    {
+                        ToastNotificationManagerCompat.OnActivated += argsCompat =>
+                        {
+                            var args = ToastArguments.Parse(argsCompat.Argument);
+                            var track = args.Get("track");
+                            var artist = args.Get("artist");
+
+                            launcher.LaunchUriAsync(new Uri($"https://www.discogs.com/search/?type=all&track={track}&artist={artist}"));
+                        };
+                    }
+
                     SetupShortcuts(topLevel, vm.Stations, mw, lifetime);
                 }
 
