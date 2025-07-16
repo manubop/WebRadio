@@ -4,7 +4,8 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-
+using System.Timers;
+using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 
 namespace WebRadio.Utils
@@ -28,7 +29,7 @@ namespace WebRadio.Utils
         private readonly ILogger _logger;
 
         private readonly HttpClient _client = new();
-        private readonly System.Timers.Timer _timer = new() { AutoReset = false };
+        private readonly Timer _timer = new() { AutoReset = false };
 
         public event EventHandler<SongInfoEventArgs>? SongInfo;
 
@@ -45,17 +46,24 @@ namespace WebRadio.Utils
 
         public async void Start()
         {
-            var info = await Update();
-
-            if (info != null)
+            try
             {
-                var interval = GetNextInterval(info);
+                var info = await Update();
 
-                _logger.LogInformation("Delay to refresh: {DelatyToRefresh}", interval);
+                if (info != null)
+                {
+                    var interval = GetNextInterval(info);
 
-                _timer.Interval = interval;
+                    _logger.LogInformation("Delay to refresh: {DelatyToRefresh}", interval);
 
-                _timer.Start();
+                    _timer.Interval = interval;
+
+                    _timer.Start();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error updating song info: {Exception}", ex.ToString());
             }
         }
 
@@ -65,7 +73,10 @@ namespace WebRadio.Utils
         {
             _logger.LogInformation("New song info: {Artist} / {Title}", artist, title);
 
-            SongInfo?.Invoke(this, new SongInfoEventArgs { Artist = artist, Title = title });
+            Dispatcher.UIThread.Post(() =>
+            {
+                SongInfo?.Invoke(this, new SongInfoEventArgs { Artist = artist, Title = title });
+            });
         }
 
         protected void LogInformation(DateTime start, DateTime now, TimeSpan elapsed, TimeSpan duration)
@@ -121,22 +132,41 @@ namespace WebRadio.Utils
         [JsonPropertyName("now")]
         public FIPSongInfo? Now { get; set; }
 
-        [JsonPropertyName("next")]
-        public FIPSongInfo? Next { get; set; }
-
         [JsonPropertyName("delayToRefresh")]
         public int DelayToRefresh { get; set; }
     }
 
     internal sealed class FIPSongInfoDownloader(string url, ILoggerFactory loggerFactory) : SongInfoDownloaderBase<FIPSongPayload>(url, loggerFactory.CreateLogger<FIPSongInfoDownloader>())
     {
+        private string _firstLine = string.Empty;
+        private string _secondLine = string.Empty;
+        private const string _separator = " • ";
+
         protected override int GetNextInterval(FIPSongPayload info)
         {
             var now = info.Now;
 
             if (now != null)
             {
-                RaiseSongInfoEvent(now.SecondLine, now.FirstLine);
+                var firstLine = now.FirstLine;
+                var secondLine = now.SecondLine;
+
+                if (firstLine != _firstLine || secondLine != _secondLine)
+                {
+                    if (secondLine.Contains(_separator))
+                    {
+                        var titleArtist = secondLine.Split(_separator);
+
+                        RaiseSongInfoEvent(titleArtist[1], titleArtist[0]);
+                    }
+                    else
+                    {
+                        RaiseSongInfoEvent(secondLine, firstLine);
+                    }
+
+                    _firstLine = firstLine;
+                    _secondLine = secondLine;
+                }
             }
 
             return info.DelayToRefresh;
@@ -203,7 +233,7 @@ namespace WebRadio.Utils
     {
         public ISongInfoDownloader? GetDownloader(string url)
         {
-            if (url.Contains("/fip/"))
+            if (url.Contains(".radiofrance.fr/"))
             {
                 return new FIPSongInfoDownloader(url, loggerFactory);
             }
