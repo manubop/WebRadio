@@ -6,7 +6,8 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="WebRadio.Views.StationsView"
 			 x:DataType="vm:StationsViewModel"
-			 xmlns:local="clr-namespace:WebRadio;assembly=WebRadio">
+			 xmlns:local="clr-namespace:WebRadio;assembly=WebRadio"
+			 KeyboardNavigation.TabNavigation="None">
 	<DockPanel>
 		<WrapPanel DockPanel.Dock="Bottom" HorizontalAlignment="Stretch">
 			<Button Command="{Binding AddNewItem}">
