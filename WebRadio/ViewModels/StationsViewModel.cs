@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 
 using Avalonia.Threading;
 
@@ -35,12 +36,12 @@ namespace WebRadio.ViewModels
         private ISongInfoDownloader? _downloader;
 
         IStream? _stream;
-        System.Timers.Timer? _timer;
+        Timer? _timer;
         DateTime _start;
 
         public StationsViewModel(IStationService service, Options options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory, IStationEditor stationEditor)
         {
-            Model = new(service.Load().Select(s => new StationModel(s)));
+            Model = [.. service.Load().Select(s => new StationModel(s))];
 
             Model.CollectionChanged += (_, _) =>
             {
