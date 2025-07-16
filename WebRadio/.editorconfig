@@ -239,6 +239,10 @@ dotnet_diagnostic.CA1848.severity = silent
 
 # CA1716: Reserved keyword
 dotnet_diagnostic.CA1716.severity = silent
+csharp_prefer_system_threading_lock = true:silent
+csharp_style_prefer_implicitly_typed_lambda_expression = true:suggestion
+csharp_style_prefer_unbound_generic_type_in_nameof = true:suggestion
+csharp_prefer_static_anonymous_function = true:suggestion
 
 [*.{cs,vb}]
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
