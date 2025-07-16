@@ -68,19 +68,6 @@ namespace WebRadio.ViewModels
             }
         }
 
-        int _playingIndex = -1;
-
-        public int PlayingIndex
-        {
-            get => _playingIndex;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _playingIndex, value);
-            }
-        }
-
-        public StationModel SelectedStation => Model[SelectedIndex];
-
         int _selectedIndex;
 
         public int SelectedIndex
@@ -105,6 +92,8 @@ namespace WebRadio.ViewModels
                 this.RaiseAndSetIfChanged(ref _isItemPlaying, value);
             }
         }
+
+        public int LastPlayedIndex { get; set; }
 
         private SongInfo _songInfo = SongInfo.Empty;
 
@@ -162,7 +151,7 @@ namespace WebRadio.ViewModels
             return ((double)bytes / 1024).ToString("0.00 KB", CultureInfo.InvariantCulture);
         }
 
-        public void PlayItem()
+        public void PlayItem(int index)
         {
             _logger.LogInformation("PlayItem");
 
@@ -173,12 +162,12 @@ namespace WebRadio.ViewModels
 
             StopItem();
 
-            var station = Model[SelectedIndex];
+            var station = Model[index];
 
             station.Append = $"\u25B6 Buffering...";
 
             Buffering = true;
-            PlayingIndex = SelectedIndex;
+            LastPlayedIndex = index;
 
             Task.Run(() =>
             {
@@ -255,15 +244,13 @@ namespace WebRadio.ViewModels
                 _downloader?.Dispose();
                 _downloader = null;
 
-                var station = Model[PlayingIndex];
+                var station = Model[LastPlayedIndex];
 
                 station.Append = string.Empty;
 
                 IsItemPlaying = false;
 
                 SongInfo = SongInfo.Empty;
-
-                PlayingIndex = -1;
             }
         }
 
@@ -275,25 +262,23 @@ namespace WebRadio.ViewModels
             }
             else
             {
-                PlayItem();
+                PlayItem(LastPlayedIndex);
             }
         }
 
         public void PlayPrevItem()
         {
-            if (SelectedIndex > 0)
+            if (LastPlayedIndex > 0)
             {
-                SelectedIndex--;
-                PlayItem();
+                PlayItem(LastPlayedIndex - 1);
             }
         }
 
         public void PlayNextItem()
         {
-            if (SelectedIndex < Model.Count - 1)
+            if (LastPlayedIndex < Model.Count - 1)
             {
-                SelectedIndex++;
-                PlayItem();
+                PlayItem(LastPlayedIndex + 1);
             }
         }
 

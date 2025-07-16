@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Text.Json;
 
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -25,36 +24,6 @@ using WebRadio.Views;
 
 namespace WebRadio
 {
-    public class AppState
-    {
-        public int SelectedIndex { get; set; }
-
-        public bool IsPlaying { get; set; }
-
-        public void Save(string filename)
-        {
-            var text = JsonSerializer.Serialize(this);
-
-            File.WriteAllText(filename, text);
-        }
-
-        public static AppState? Load(string filename)
-        {
-            try
-            {
-                var text = File.ReadAllText(filename);
-
-                return JsonSerializer.Deserialize<AppState>(text);
-            }
-            catch (Exception ex)
-            {
-                App.logger.LogWarning("Could not read state: {Exception}", ex.Message);
-
-                return null;
-            }
-        }
-    }
-
     public partial class App : Application
     {
         private static readonly string homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -167,10 +136,12 @@ namespace WebRadio
                 if (appState != null)
                 {
                     vm.Stations.SelectedIndex = appState.SelectedIndex;
+                    vm.Stations.LastPlayedIndex = appState.LastPlayedIndex;
+                    vm.Stations.Volume = appState.Volume;
 
-                    if (appState.IsPlaying)
+                    if (appState.IsItemPlaying)
                     {
-                        vm.Stations.PlayItem();
+                        vm.Stations.PlayItem(appState.LastPlayedIndex);
                     }
                 }
             }
@@ -185,7 +156,9 @@ namespace WebRadio
                 var appState = new AppState
                 {
                     SelectedIndex = vm.Stations.SelectedIndex,
-                    IsPlaying = vm.Stations.PlayingIndex != -1,
+                    IsItemPlaying = vm.Stations.IsItemPlaying,
+                    LastPlayedIndex = vm.Stations.LastPlayedIndex,
+                    Volume = vm.Stations.Volume,
                 };
 
                 appState.Save(stateFilename);
