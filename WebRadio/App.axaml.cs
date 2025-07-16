@@ -45,7 +45,10 @@ namespace WebRadio
 
         public override void OnFrameworkInitializationCompleted()
         {
-            logger.LogInformation("Initializing !");
+            if (!Design.IsDesignMode)
+            {
+                logger.LogInformation("Initializing !");
+            }
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
             {
