@@ -16,7 +16,7 @@ public partial class StationsView : UserControl
     {
         if (DataContext is StationsViewModel svm)
         {
-            svm.PlayItem();
+            svm.PlaySelectedItem();
         }
     }
 }

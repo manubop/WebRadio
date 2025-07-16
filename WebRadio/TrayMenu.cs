@@ -1,11 +1,11 @@
 ﻿using System;
-
+using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
-
+using Avalonia.Threading;
 using ReactiveUI;
 
 using WebRadio.ViewModels;
@@ -18,7 +18,7 @@ namespace WebRadio
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow?.DataContext is MainWindowViewModel vm)
             {
-                vm.Stations.PlayItem();
+                vm.Stations.PlayLastPlayedItem();
             }
         }
 
@@ -115,24 +115,30 @@ namespace WebRadio
                 ]
             };
 
-            vm.WhenAnyValue(x => x.SongInfo, x => x.PlayingIndex).Subscribe(x =>
+            var context = AvaloniaSynchronizationContext.Current;
+
+            if (context != null)
             {
-                if (x.Item2 != -1)
+                vm.WhenAnyValue(x => x.SongInfo, x => x.IsItemPlaying).ObserveOn(context).Subscribe(x =>
                 {
-                    trayIcon.ToolTipText = vm.SelectedStation.Name;
-
-                    var songInfo = x.Item1;
-
-                    if (!songInfo.IsEmpty())
+                    if (x.Item2)
                     {
-                        trayIcon.ToolTipText += Environment.NewLine + songInfo.Artist + " / " + songInfo.Title;
+                        var prepend = "";
+                        var songInfo = x.Item1;
+
+                        if (!songInfo.IsEmpty())
+                        {
+                            prepend = songInfo.Artist + " / " + songInfo.Title + Environment.NewLine;
+                        }
+
+                        trayIcon.ToolTipText = prepend + vm.LastPlayedStation.Name;
                     }
-                }
-                else
-                {
-                    trayIcon.ToolTipText = "WebRadio";
-                }
-            });
+                    else
+                    {
+                        trayIcon.ToolTipText = "WebRadio";
+                    }
+                });
+            }
 
             SetValue(TrayIcon.IconsProperty, [trayIcon]);
         }

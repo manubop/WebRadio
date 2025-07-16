@@ -11,13 +11,19 @@ using WebRadio.Utils;
 
 namespace WebRadio.ViewModels
 {
-    public class MainWindowViewModel : ViewModelBase
+    public interface IStationEditor
+    {
+        void AddItem();
+        void EditItem(StationModel current);
+    }
+
+    public class MainWindowViewModel : ViewModelBase, IStationEditor
     {
         private ViewModelBase _contentViewModel;
 
         public MainWindowViewModel(IStationService service, Options options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory)
         {
-            Stations = new(service, options, loggerFactory, songDownloaderFactory);
+            Stations = new(service, options, loggerFactory, songDownloaderFactory, this);
 
             _contentViewModel = Stations;
         }
@@ -58,21 +64,14 @@ namespace WebRadio.ViewModels
             });
         }
 
-        public void RemoveItem()
+        public void EditItem(StationModel current)
         {
-            Stations.Model.RemoveAt(Stations.SelectedIndex);
-        }
-
-        public void EditItem()
-        {
-            var current = Stations.Model[Stations.SelectedIndex];
-
             AddOrEditItem(
                 station =>
                 {
                     var selectedIndex = Stations.SelectedIndex;
 
-                    Stations.Model[Stations.SelectedIndex] = station;
+                    Stations.Model[selectedIndex] = station;
 
                     Stations.SelectedIndex = selectedIndex;
                 },

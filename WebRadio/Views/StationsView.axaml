@@ -8,26 +8,20 @@
 			 x:DataType="vm:StationsViewModel"
 			 xmlns:local="clr-namespace:WebRadio;assembly=WebRadio">
 	<DockPanel>
-		<WrapPanel DockPanel.Dock="Bottom"
-				HorizontalAlignment="Stretch">
-			<Button x:CompileBindings="False"
-					Command="{Binding $parent[Window].DataContext.AddItem}">
+		<WrapPanel DockPanel.Dock="Bottom" HorizontalAlignment="Stretch">
+			<Button Command="{Binding AddNewItem}">
 				Add
 			</Button>
-			<Button x:CompileBindings="False"
-					Command="{Binding $parent[Window].DataContext.RemoveItem}" IsEnabled="{Binding IsItemSelected}">
+			<Button Command="{Binding RemoveSelectedItem}" IsEnabled="{Binding IsItemSelected}">
 				Remove
 			</Button>
-			<Button x:CompileBindings="False"
-					Command="{Binding $parent[Window].DataContext.EditItem}" IsEnabled="{Binding IsItemSelected}">
+			<Button Command="{Binding EditSelectedItem}" IsEnabled="{Binding IsItemSelected}">
 				Edit
 			</Button>
-			<Button x:CompileBindings="False"
-					Command="{Binding PlayItem}" IsEnabled="{Binding IsItemSelected}">
+			<Button Command="{Binding PlaySelectedItem}" IsEnabled="{Binding IsItemSelected}">
 				Play
 			</Button>
-			<Button x:CompileBindings="False"
-					Command="{Binding StopItem}" IsEnabled="{Binding IsItemPlaying}">
+			<Button Command="{Binding StopItem}" IsEnabled="{Binding IsItemPlaying}">
 				Stop
 			</Button>
 		</WrapPanel>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -54,19 +55,25 @@ namespace WebRadio
                     DataContext = vm,
                 };
 
-                vm.Stations.WhenAnyValue(x => x.SongInfo, x => x.PlayingIndex).Subscribe(x =>
-                {
-                    if (x.Item2 != -1)
-                    {
-                        var songInfo = x.Item1;
+                var context = SynchronizationContext.Current;
 
-                        mw.Title = songInfo.IsEmpty() ? vm.Stations.SelectedStation.Name : songInfo.Artist + " / " + songInfo.Title;
-                    }
-                    else
+                if (context != null)
+                {
+                    vm.Stations.WhenAnyValue(x => x.SongInfo, x => x.IsItemPlaying).ObserveOn(context).Subscribe(x =>
                     {
-                        mw.Title = "WebRadio";
-                    }
-                });
+                        if (x.Item2)
+                        {
+                            var songInfo = x.Item1;
+
+                            mw.Title = songInfo.IsEmpty() ? vm.Stations.LastPlayedStation.Name : songInfo.Artist + " / " + songInfo.Title;
+
+                        }
+                        else
+                        {
+                            mw.Title = "WebRadio";
+                        }
+                    });
+                }
 
                 lifetime.MainWindow = mw;
 

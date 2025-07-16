@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 using Avalonia.Threading;
@@ -32,6 +30,7 @@ namespace WebRadio.ViewModels
         private readonly Options _options;
         private readonly ILogger _logger;
         private readonly ISongDownloaderFactory _songDownloaderFactory;
+        private readonly IStationEditor _stationEditor;
 
         private ISongInfoDownloader? _downloader;
 
@@ -39,7 +38,7 @@ namespace WebRadio.ViewModels
         System.Timers.Timer? _timer;
         DateTime _start;
 
-        public StationsViewModel(IStationService service, Options options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory)
+        public StationsViewModel(IStationService service, Options options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory, IStationEditor stationEditor)
         {
             Model = new(service.Load().Select(s => new StationModel(s)));
 
@@ -53,9 +52,25 @@ namespace WebRadio.ViewModels
             _options = options;
             _logger = loggerFactory.CreateLogger<StationsViewModel>();
             _songDownloaderFactory = songDownloaderFactory;
+            _stationEditor = stationEditor;
         }
 
         public ObservableCollection<StationModel> Model { get; }
+
+        public void AddNewItem()
+        {
+            _stationEditor.AddItem();
+        }
+
+        public void EditSelectedItem()
+        {
+            _stationEditor.EditItem(SelectedStation);
+        }
+
+        public void RemoveSelectedItem()
+        {
+            Model.RemoveAt(SelectedIndex);
+        }
 
         float _volume = 1;
 
@@ -80,6 +95,8 @@ namespace WebRadio.ViewModels
             }
         }
 
+        public StationModel SelectedStation => Model[_selectedIndex];
+
         public bool IsItemSelected => _selectedIndex >= 0;
 
         bool _isItemPlaying;
@@ -94,6 +111,8 @@ namespace WebRadio.ViewModels
         }
 
         public int LastPlayedIndex { get; set; }
+
+        public StationModel LastPlayedStation => Model[LastPlayedIndex];
 
         private SongInfo _songInfo = SongInfo.Empty;
 
@@ -177,10 +196,7 @@ namespace WebRadio.ViewModels
                     {
                         _downloader.SongInfo += (_, args) =>
                         {
-                            Dispatcher.UIThread.Post(() =>
-                            {
-                                SongInfo = new SongInfo { Artist = args.Artist, Title = args.Title };
-                            });
+                            SongInfo = new SongInfo { Artist = args.Artist, Title = args.Title };
                         };
 
                         _downloader.Start();
@@ -265,6 +281,16 @@ namespace WebRadio.ViewModels
             {
                 PlayItem(LastPlayedIndex + 1);
             }
+        }
+
+        public void PlayLastPlayedItem()
+        {
+            PlayItem(LastPlayedIndex);
+        }
+
+        public void PlaySelectedItem()
+        {
+            PlayItem(SelectedIndex);
         }
 
         public void Dispose()
