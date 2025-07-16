@@ -43,7 +43,7 @@ namespace WebRadio
         {
             logger.LogInformation("Initializing !");
 
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
             {
                 var service = new StationsService(stationsFilename);
                 var options = new Options();
@@ -68,14 +68,14 @@ namespace WebRadio
                     }
                 });
 
-                desktop.MainWindow = mw;
+                lifetime.MainWindow = mw;
 
                 RegisterTrayIcon(vm.Stations);
 
-                desktop.Startup += OnStartup;
-                desktop.Exit += OnExit;
+                lifetime.Startup += OnStartup;
+                lifetime.Exit += OnExit;
 
-                SetupHotKeys(desktop, new Dictionary<VirtualKeyCode, Action> {
+                SetupHotKeys(lifetime, new Dictionary<VirtualKeyCode, Action> {
                     { VirtualKeyCode.VK_MEDIA_PLAY_PAUSE, () => vm.Stations.PlayPauseItem() },
                     { VirtualKeyCode.VK_MEDIA_PREV_TRACK, () => vm.Stations.PlayPrevItem() },
                     { VirtualKeyCode.VK_MEDIA_NEXT_TRACK, () => vm.Stations.PlayNextItem() },
@@ -85,7 +85,7 @@ namespace WebRadio
             base.OnFrameworkInitializationCompleted();
         }
 
-        private static void SetupHotKeys(IClassicDesktopStyleApplicationLifetime desktop, IDictionary<VirtualKeyCode, Action> hotKeyActions)
+        private static void SetupHotKeys(IClassicDesktopStyleApplicationLifetime lifetime, IDictionary<VirtualKeyCode, Action> hotKeyActions)
         {
             var context = AvaloniaSynchronizationContext.Current;
 
@@ -102,7 +102,7 @@ namespace WebRadio
 
             var hotKeys = hotKeyActions.Keys.Select(key => hotKeyManager.Register(key, 0)).ToList();
 
-            desktop.Exit += (sender, args) =>
+            lifetime.Exit += (sender, args) =>
             {
                 foreach (var hotKey in hotKeys)
                 {
