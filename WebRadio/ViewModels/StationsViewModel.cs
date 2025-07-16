@@ -136,21 +136,6 @@ namespace WebRadio.ViewModels
             });
         }
 
-        private static string FormatBytes(long bytes)
-        {
-            if (bytes >= 0x40000000)
-            {
-                return ((double)(bytes >> 20) / 1024).ToString("0.00 GB", CultureInfo.InvariantCulture);
-            }
-
-            if (bytes >= 0x100000)
-            {
-                return ((double)(bytes >> 10) / 1024).ToString("0.00 MB", CultureInfo.InvariantCulture);
-            }
-
-            return ((double)bytes / 1024).ToString("0.00 KB", CultureInfo.InvariantCulture);
-        }
-
         public void PlayItem(int index)
         {
             _logger.LogInformation("PlayItem");
@@ -171,7 +156,7 @@ namespace WebRadio.ViewModels
 
             Task.Run(() =>
             {
-                _stream = CreateStream(station.Url, _options);
+                _stream = StreamHelper.CreateStream(station.Url, _options, _logger);
 
                 Buffering = false;
 
@@ -223,7 +208,7 @@ namespace WebRadio.ViewModels
                     var diff = DateTime.Now - _start;
                     var pos = _stream.GetFilePosition(BASSStreamFilePosition.BASS_FILEPOS_DOWNLOAD);
 
-                    station.Append = $"\u25B6 {diff.Hours:D2}:{diff.Minutes:D2}:{diff.Seconds:D2} / {FormatBytes(pos)}";
+                    station.Append = $"\u25B6 {diff.Hours:D2}:{diff.Minutes:D2}:{diff.Seconds:D2} / {StreamHelper.FormatBytes(pos)}";
                 };
 
                 _timer.AutoReset = true;
@@ -280,58 +265,6 @@ namespace WebRadio.ViewModels
             {
                 PlayItem(LastPlayedIndex + 1);
             }
-        }
-
-        private IStream? CreateStream(string url, Options options)
-        {
-            _logger.LogDebug("Opening {Url}", url);
-
-            var stream = Stream.Create(url, BASSFlag.BASS_STREAM_STATUS, (IntPtr buffer, int length, IntPtr user) =>
-            {
-                if (buffer != IntPtr.Zero && length == 0 && options.ShowDownloadInfo)
-                {
-                    var txt = Marshal.PtrToStringAnsi(buffer);
-
-                    _logger.LogDebug("Download info: {Info}", txt);
-                }
-            });
-
-            if (stream == null)
-            {
-                _logger.LogError("Could not create stream from {Url}", url);
-                return null;
-            }
-
-            var channelInfo = stream.GetInfo();
-
-            _logger.LogDebug("Channel info: {ChannelInfo}", channelInfo);
-
-            if (channelInfo.ctype == BASSChannelType.BASS_CTYPE_STREAM_MF)
-            {
-                var wftext = stream.GetTagsWAVEFORMAT();
-
-                if (wftext != null)
-                {
-                    _logger.LogDebug("Sample rate: {SampleRate}kbps", wftext.waveformatex.nAvgBytesPerSec * 8 / 1000);
-                }
-            }
-
-            if (options.ShowICYTags)
-            {
-                var icy = stream.GetTagsICY() ?? stream.GetTagsHTTP() ?? [];
-
-                foreach (var tag in icy)
-                {
-                    if (tag.StartsWith("icy-metaint:", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        stream.HasMetadata = true;
-                    }
-
-                    _logger.LogDebug("ICY tag: {Tag}", tag);
-                }
-            }
-
-            return stream;
         }
 
         public void Dispose()
