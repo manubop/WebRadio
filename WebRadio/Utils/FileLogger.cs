@@ -7,27 +7,17 @@ namespace WebRadio.Utils
 {
     public class FileLoggerProvider(string filename) : ILoggerProvider
     {
-        private readonly StreamWriter _writer = new(filename, true) { AutoFlush = true };
-
-        public ILogger CreateLogger(string categoryName)
-        {
-            return new FileLogger(categoryName, _writer);
-        }
+        public ILogger CreateLogger(string categoryName) => new FileLogger(categoryName, filename);
 
         public void Dispose()
         {
-            _writer.Dispose();
-
             GC.SuppressFinalize(this);
         }
     }
 
-    public class FileLogger(string categoryName, StreamWriter writer) : ILogger
+    public class FileLogger(string categoryName, string filename) : ILogger
     {
-        IDisposable? ILogger.BeginScope<TState>(TState state)
-        {
-            return null;
-        }
+        IDisposable? ILogger.BeginScope<TState>(TState state) => null;
 
         public bool IsEnabled(LogLevel logLevel) => true;
 
@@ -38,10 +28,7 @@ namespace WebRadio.Utils
             Exception? exception,
             Func<TState, Exception?, string> formatter)
         {
-            if (!IsEnabled(logLevel))
-            {
-                return;
-            }
+            using var writer = new StreamWriter(filename, true);
 
             var message = formatter(state, exception);
 
@@ -51,9 +38,6 @@ namespace WebRadio.Utils
 
     public static class LoggingBuilderExt
     {
-        public static ILoggingBuilder AddFileLoggerProvider(this ILoggingBuilder builder, string filename)
-        {
-            return builder.AddProvider(new FileLoggerProvider(filename));
-        }
+        public static ILoggingBuilder AddFileLoggerProvider(this ILoggingBuilder builder, string filename) => builder.AddProvider(new FileLoggerProvider(filename));
     }
 }
