@@ -33,6 +33,13 @@
 					<TextBlock Text="{Binding Concat}"/>
 				</DataTemplate>
 			</ListBox.ItemTemplate>
+			<ListBox.ContextMenu>
+				<ContextMenu>
+					<MenuItem Header="Edit" Command="{Binding EditSelectedItem}"/>
+					<MenuItem Header="Remove" Command="{Binding RemoveSelectedItem}"/>
+					<MenuItem Header="Play" Command="{Binding PlaySelectedItem}"/>
+				</ContextMenu>
+			</ListBox.ContextMenu>
 		</ListBox>
 	</DockPanel>
 </UserControl>
