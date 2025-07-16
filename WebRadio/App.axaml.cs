@@ -6,7 +6,9 @@ using System.Reactive.Linq;
 using System.Threading;
 
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 
@@ -75,6 +77,13 @@ namespace WebRadio
                     });
                 }
 
+                var topLevel = TopLevel.GetTopLevel(mw);
+
+                if (topLevel != null)
+                {
+                    SetupShortcuts(topLevel, vm.Stations, mw, lifetime);
+                }
+
                 lifetime.MainWindow = mw;
 
                 RegisterTrayIcon(vm.Stations);
@@ -117,6 +126,125 @@ namespace WebRadio
                 }
 
                 hotKeyManager.Dispose();
+            };
+        }
+
+        private static void SetupShortcuts(InputElement topLevel, StationsViewModel stations, Window mw, IControlledApplicationLifetime lifetime)
+        {
+            topLevel.KeyDown += (sender, args) =>
+            {
+                switch (args.Key)
+                {
+                    case Key.Up:
+                        if (stations.SelectedIndex > 0)
+                        {
+                            stations.SelectedIndex--;
+                        }
+                        break;
+                    case Key.Down:
+                        if (stations.SelectedIndex < stations.Model.Count - 1)
+                        {
+                            stations.SelectedIndex++;
+                        }
+                        break;
+                    case Key.PageUp:
+                        {
+                            var selectedIndex = stations.SelectedIndex;
+
+                            if (selectedIndex > 0)
+                            {
+                                selectedIndex -= 5;
+
+                                if (selectedIndex < 0)
+                                {
+                                    selectedIndex = 0;
+                                }
+
+                                stations.SelectedIndex = selectedIndex;
+                            }
+                        }
+                        break;
+                    case Key.PageDown:
+                        {
+                            var selectedIndex = stations.SelectedIndex;
+                            var max = stations.Model.Count - 1;
+
+                            if (selectedIndex < max)
+                            {
+                                selectedIndex += 5;
+
+                                if (selectedIndex > max)
+                                {
+                                    selectedIndex = max;
+                                }
+
+                                stations.SelectedIndex = selectedIndex;
+                            }
+                        }
+                        break;
+                    case Key.Home:
+                        if (stations.SelectedIndex > 0)
+                        {
+                            stations.SelectedIndex = 0;
+                        }
+                        break;
+                    case Key.End:
+                        if (stations.SelectedIndex < stations.Model.Count - 1)
+                        {
+                            stations.SelectedIndex = stations.Model.Count - 1;
+                        }
+                        break;
+                    case Key.Enter:
+                        stations.PlaySelectedItem();
+                        break;
+                    case Key.Back:
+                        stations.StopItem();
+                        break;
+                    case Key.Escape:
+                        mw.Hide();
+                        mw.ShowInTaskbar = false;
+                        break;
+                    case Key.Subtract:
+                        {
+                            var vol = stations.Volume;
+
+                            if (vol > 0f)
+                            {
+                                vol -= 0.1f;
+
+                                if (vol < 0f)
+                                {
+                                    vol = 0f;
+                                }
+
+                                stations.Volume = vol;
+                            }
+                        }
+                        break;
+                    case Key.Add:
+                        {
+                            var vol = stations.Volume;
+
+                            if (vol < 1f)
+                            {
+                                vol += 0.1f;
+
+                                if (vol > 1f)
+                                {
+                                    vol = 1f;
+                                }
+
+                                stations.Volume = vol;
+                            }
+                        }
+                        break;
+                    case Key.Q:
+                        if (args.KeyModifiers == KeyModifiers.Control)
+                        {
+                            lifetime.Shutdown();
+                        }
+                        break;
+                }
             };
         }
 
