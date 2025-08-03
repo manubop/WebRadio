@@ -108,7 +108,7 @@ namespace WebRadio
 
                 lifetime.MainWindow = mw;
 
-                RegisterTrayIcon(vm.Stations);
+                RegisterTrayIcon(vm.Stations, mw, lifetime);
 
                 lifetime.Startup += OnStartup;
                 lifetime.Exit += OnExit;

@@ -142,7 +142,16 @@ namespace WebRadio.ViewModels
             }
         }
 
-        public int LastPlayedIndex { get; set; }
+        int _lastPlayedIndex;
+
+        public int LastPlayedIndex
+        {
+            get => _lastPlayedIndex;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _lastPlayedIndex, value);
+            }
+        }
 
         public StationModel LastPlayedStation => Model[LastPlayedIndex];
 

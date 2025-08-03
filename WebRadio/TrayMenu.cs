@@ -8,108 +8,47 @@ using Avalonia.Platform;
 using ReactiveUI;
 
 using WebRadio.ViewModels;
+using WebRadio.Views;
 
 namespace WebRadio
 {
     public partial class App : Application
     {
-        private void PlayCommand()
-        {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow?.DataContext is MainWindowViewModel vm)
-            {
-                vm.Stations.PlayLastPlayedItem();
-            }
-        }
-
-        private void StopCommand()
-        {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow?.DataContext is MainWindowViewModel vm)
-            {
-                vm.Stations.StopItem();
-            }
-        }
-
-        private void PrevCommand()
-        {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow?.DataContext is MainWindowViewModel vm)
-            {
-                vm.Stations.PlayPrevItem();
-            }
-        }
-
-        private void NextCommand()
-        {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow?.DataContext is MainWindowViewModel vm)
-            {
-                vm.Stations.PlayNextItem();
-            }
-        }
-
-        private void ExitCommand()
-        {
-            if (Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
-            {
-                lifetime.Shutdown();
-            }
-        }
-
-        private void ShowCommand()
-        {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                var mw = desktop.MainWindow;
-
-                if (mw != null)
-                {
-                    if (mw.IsVisible)
-                    {
-                        mw.ShowInTaskbar = false;
-                        mw.Hide();
-                    }
-                    else
-                    {
-                        mw.ShowInTaskbar = true;
-                        mw.Show();
-                    }
-                }
-            }
-        }
-
-        private void RegisterTrayIcon(StationsViewModel vm)
+        private void RegisterTrayIcon(StationsViewModel vm, MainWindow mainWindow, IControlledApplicationLifetime lifetime)
         {
             var trayIcon = new TrayIcon
             {
                 IsVisible = true,
                 ToolTipText = "WebRadio",
                 Icon = new WindowIcon(new Bitmap(AssetLoader.Open(new Uri("avares://WebRadio/Assets/avalonia-logo.ico")))),
-                Command = ReactiveCommand.Create(ShowCommand),
+                Command = ReactiveCommand.Create(() => mainWindow.ToggleVisibility()),
                 Menu =
                 [
                     new NativeMenuItem
                     {
                         Header = "Play",
-                        Command = ReactiveCommand.Create(PlayCommand)
+                        Command = ReactiveCommand.Create(() => vm.PlayLastPlayedItem(), vm.WhenAnyValue(x => x.IsItemPlaying, x => !x))
                     },
                     new NativeMenuItem
                     {
                         Header = "Stop",
-                        Command = ReactiveCommand.Create(StopCommand)
+                        Command = ReactiveCommand.Create(() => vm.StopItem(), vm.WhenAnyValue(x => x.IsItemPlaying))
                     },
                     new NativeMenuItem
                     {
                         Header = "Prev",
-                        Command = ReactiveCommand.Create(PrevCommand)
+                        Command = ReactiveCommand.Create(() => vm.PlayPrevItem(), vm.WhenAnyValue(x => x.LastPlayedIndex, x => x > 0))
                     },
                     new NativeMenuItem
                     {
                         Header = "Next",
-                        Command = ReactiveCommand.Create(NextCommand)
+                        Command = ReactiveCommand.Create(() => vm.PlayNextItem(), vm.WhenAnyValue(x => x.LastPlayedIndex, x => x < vm.Model.Count - 1))
                     },
                     new NativeMenuItemSeparator(),
                     new NativeMenuItem
                     {
                         Header = "Exit",
-                        Command = ReactiveCommand.Create(ExitCommand)
+                        Command = ReactiveCommand.Create(() => lifetime.Shutdown())
                     }
                 ]
             };

@@ -9,6 +9,20 @@ namespace WebRadio.Views
             InitializeComponent();
         }
 
+        public void ToggleVisibility()
+        {
+            if (IsVisible)
+            {
+                Hide();
+                ShowInTaskbar = false;
+            }
+            else
+            {
+                Show();
+                ShowInTaskbar = true;
+            }
+        }
+
         protected override void OnClosing(WindowClosingEventArgs e)
         {
             Hide();
