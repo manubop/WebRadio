@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
 using System.Timers;
 
 using Avalonia.Threading;
@@ -26,6 +25,40 @@ namespace WebRadio.ViewModels
         public bool ShowICYTags { get; set; } = true;
     }
 
+    internal sealed class StationAppender(StationModel station, IRadioStream stream, int interval) : IDisposable
+    {
+        private readonly Timer _timer = new(interval) { AutoReset = true };
+
+        public void Start()
+        {
+            var start = DateTime.Now;
+
+            _timer.Elapsed += (_, _) =>
+            {
+                var diff = DateTime.Now - start;
+                var pos = stream.GetFilePosition(BASSStreamFilePosition.BASS_FILEPOS_DOWNLOAD);
+
+                station.Append = $"\u25B6 {diff.Hours:D2}:{diff.Minutes:D2}:{diff.Seconds:D2} / {StreamHelper.FormatBytes(pos)}";
+            };
+
+            _timer.Enabled = true;
+        }
+
+        public void Stop()
+        {
+            _timer.Stop();
+
+            station.Append = string.Empty;
+        }
+
+        public void Dispose()
+        {
+            _timer.Dispose();
+
+            GC.SuppressFinalize(this);
+        }
+    }
+
     public class StationsViewModel : ViewModelBase, IDisposable
     {
         private readonly Options _options;
@@ -34,10 +67,8 @@ namespace WebRadio.ViewModels
         private readonly IStationEditor _stationEditor;
 
         private ISongInfoDownloader? _downloader;
-
-        IStream? _stream;
-        Timer? _timer;
-        DateTime _start;
+        private IRadioStream? _stream;
+        private StationAppender? _appender;
 
         public StationsViewModel(IStationService service, Options options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory, IStationEditor stationEditor)
         {
@@ -139,13 +170,13 @@ namespace WebRadio.ViewModels
 
         private void UpdateSongInfoFromTagInfo(TAG_INFO tagInfo)
         {
-            if (SongInfo.Equals(tagInfo))
-            {
-                return;
-            }
-
             Dispatcher.UIThread.Post(() =>
             {
+                if (SongInfo.Equals(tagInfo))
+                {
+                    return;
+                }
+
                 _logger.LogInformation("New TAG_INFO: {Artist} / {Title}", tagInfo.artist, tagInfo.title);
 
                 SongInfo = new SongInfo
@@ -156,7 +187,7 @@ namespace WebRadio.ViewModels
             });
         }
 
-        public void PlayItem(int index)
+        public async void PlayItem(int index)
         {
             _logger.LogInformation("PlayItem");
 
@@ -174,63 +205,53 @@ namespace WebRadio.ViewModels
             Buffering = true;
             LastPlayedIndex = index;
 
-            Task.Run(() =>
+            _stream = await StreamHelper.CreateStream(station.Url, _options, _logger);
+
+            Buffering = false;
+
+            if (_stream == null)
             {
-                _stream = StreamHelper.CreateStream(station.Url, _options, _logger);
+                _logger.LogError("Failed to create stream !");
 
-                Buffering = false;
+                station.Append = string.Empty;
 
-                if (_stream == null)
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(station.Api))
+            {
+                _downloader = _songDownloaderFactory.GetDownloader(station.Api);
+
+                if (_downloader != null)
                 {
-                    _logger.LogError("Failed to create stream !");
-
-                    station.Append = string.Empty;
-
-                    return;
-                }
-
-                if (!string.IsNullOrEmpty(station.Api))
-                {
-                    _downloader = _songDownloaderFactory.GetDownloader(station.Api);
-
-                    if (_downloader != null)
+                    _downloader.SongInfo += (_, args) =>
                     {
-                        _downloader.SongInfo += (_, args) =>
+                        Dispatcher.UIThread.Post(() =>
                         {
                             SongInfo = new SongInfo { Artist = args.Artist, Title = args.Title };
-                        };
+                        });
+                    };
 
-                        _downloader.Start();
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Could not find a suitable downloader: {Api}", station.Api);
-                    }
+                    _downloader.Start();
                 }
                 else
                 {
-                    _stream.SetupTagDisplay(station.Url, UpdateSongInfoFromTagInfo);
+                    _logger.LogWarning("Could not find a suitable downloader: {Api}", station.Api);
                 }
+            }
+            else
+            {
+                _stream.SetupTagDisplay(station.Url, UpdateSongInfoFromTagInfo);
+            }
 
-                IsItemPlaying = true;
+            IsItemPlaying = true;
 
-                _stream.SetAttribute(BASSAttribute.BASS_ATTRIB_VOL, Volume);
-                _stream.Play(true);
+            _stream.SetAttribute(BASSAttribute.BASS_ATTRIB_VOL, Volume);
+            _stream.Play(true);
 
-                _start = DateTime.Now;
-                _timer = new System.Timers.Timer(100);
+            _appender = new StationAppender(station, _stream, 100);
 
-                _timer.Elapsed += (_, _) =>
-                {
-                    var diff = DateTime.Now - _start;
-                    var pos = _stream.GetFilePosition(BASSStreamFilePosition.BASS_FILEPOS_DOWNLOAD);
-
-                    station.Append = $"\u25B6 {diff.Hours:D2}:{diff.Minutes:D2}:{diff.Seconds:D2} / {StreamHelper.FormatBytes(pos)}";
-                };
-
-                _timer.AutoReset = true;
-                _timer.Enabled = true;
-            });
+            _appender.Start();
         }
 
         public void StopItem()
@@ -240,15 +261,12 @@ namespace WebRadio.ViewModels
                 _stream.Dispose();
                 _stream = null;
 
-                _timer?.Dispose();
-                _timer = null;
+                _appender?.Stop();
+                _appender?.Dispose();
+                _appender = null;
 
                 _downloader?.Dispose();
                 _downloader = null;
-
-                var station = Model[LastPlayedIndex];
-
-                station.Append = string.Empty;
 
                 IsItemPlaying = false;
 
@@ -297,7 +315,7 @@ namespace WebRadio.ViewModels
         public void Dispose()
         {
             _stream?.Dispose();
-            _timer?.Dispose();
+            _appender?.Dispose();
             _downloader?.Dispose();
 
             GC.SuppressFinalize(this);

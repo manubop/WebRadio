@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-
+using System.Threading.Tasks;
 using Un4seen.Bass;
 using Un4seen.Bass.AddOn.Tags;
 
 namespace WebRadio
 {
-    internal interface IStream : IDisposable
+    internal interface IRadioStream : IDisposable
     {
         bool HasMetadata { get; set; }
         int Handle { get; }
@@ -27,29 +27,32 @@ namespace WebRadio
         bool Stop();
         bool Play(bool restart);
         bool Pause();
-        void SetupTagDisplay(string url, Action<TAG_INFO> action);
+        int SetupTagDisplay(string url, Action<TAG_INFO> action);
     }
 
-    internal sealed class Stream(int stream, DOWNLOADPROC downloadProc, params SYNCPROC[] syncProcs) : IStream
+    internal sealed class RadioStream(int stream, DOWNLOADPROC downloadProc, params SYNCPROC[] syncProcs) : IRadioStream
     {
         private readonly GCHandle _downloadProcHandle = GCHandle.Alloc(downloadProc);
-        private readonly List<GCHandle> _syncProcHandles = syncProcs.Select(syncProc => GCHandle.Alloc(syncProc)).ToList();
+        private readonly ICollection<GCHandle> _syncProcHandles = [.. syncProcs.Select(syncProc => GCHandle.Alloc(syncProc))];
 
         public bool HasMetadata { get; set; }
 
         public int Handle => stream;
 
-        public static IStream? Create(string url, BASSFlag flags, Action<IntPtr, int, IntPtr> downloadAction)
+        public static async Task<IRadioStream?> Create(string url, BASSFlag flags, Action<IntPtr, int, IntPtr> downloadAction)
         {
-            var downloadProc = new DOWNLOADPROC(downloadAction);
-            var stream = Bass.BASS_StreamCreateURL(url, 0, flags, downloadProc, IntPtr.Zero);
-
-            if (stream == 0)
+            return await Task.Run(() =>
             {
-                return null;
-            }
+                var downloadProc = new DOWNLOADPROC(downloadAction);
+                var stream = Bass.BASS_StreamCreateURL(url, 0, flags, downloadProc, IntPtr.Zero);
 
-            return new Stream(stream, downloadProc);
+                if (stream == 0)
+                {
+                    return null;
+                }
+
+                return new RadioStream(stream, downloadProc);
+            });
         }
 
         public int SetSyncProc(BASSSync type, Action<int, int, int, IntPtr> action)
@@ -89,7 +92,7 @@ namespace WebRadio
 
         public bool Pause() => Bass.BASS_ChannelPause(stream);
 
-        public void SetupTagDisplay(string url, Action<TAG_INFO> action)
+        public int SetupTagDisplay(string url, Action<TAG_INFO> action)
         {
             var tagInfo = new TAG_INFO(url);
 
@@ -98,14 +101,16 @@ namespace WebRadio
                 action(tagInfo);
             }
 
-            SetSyncProc(BASSSync.BASS_SYNC_META, (int handle, int channel, int data, IntPtr user) =>
+            return SetSyncProc(BASSSync.BASS_SYNC_META, (handle, channel, data, user) =>
             {
                 var tags = Bass.BASS_ChannelGetTags(channel, BASSTag.BASS_TAG_META);
 
-                if (tagInfo.UpdateFromMETA(tags, true, true))
+                if (!tagInfo.UpdateFromMETA(tags, true, true))
                 {
-                    action(tagInfo);
+                    return;
                 }
+
+                action(tagInfo);
             });
         }
 

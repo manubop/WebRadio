@@ -5,7 +5,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Timers;
-using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 
 namespace WebRadio.Utils
@@ -73,10 +72,7 @@ namespace WebRadio.Utils
         {
             _logger.LogInformation("New song info: {Artist} / {Title}", artist, title);
 
-            Dispatcher.UIThread.Post(() =>
-            {
-                SongInfo?.Invoke(this, new SongInfoEventArgs { Artist = artist, Title = title });
-            });
+            SongInfo?.Invoke(this, new SongInfoEventArgs { Artist = artist, Title = title });
         }
 
         protected void LogInformation(DateTime start, DateTime now, TimeSpan elapsed, TimeSpan duration)

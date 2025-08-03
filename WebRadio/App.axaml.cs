@@ -10,7 +10,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
-using Avalonia.Threading;
 
 using GlobalHotKeys.Native.Types;
 
@@ -61,35 +60,30 @@ namespace WebRadio
                     DataContext = vm,
                 };
 
-                var context = SynchronizationContext.Current;
-
-                if (context != null)
+                vm.Stations.WhenAnyValue(x => x.SongInfo, x => x.IsItemPlaying).Subscribe(x =>
                 {
-                    vm.Stations.WhenAnyValue(x => x.SongInfo, x => x.IsItemPlaying).ObserveOn(context).Subscribe(x =>
+                    if (x.Item2)
                     {
-                        if (x.Item2)
-                        {
-                            var songInfo = x.Item1;
+                        var songInfo = x.Item1;
 
-                            mw.Title = songInfo.IsEmpty() ? vm.Stations.LastPlayedStation.Name : songInfo.Artist + " / " + songInfo.Title;
+                        mw.Title = songInfo.IsEmpty() ? vm.Stations.LastPlayedStation.Name : songInfo.Artist + " / " + songInfo.Title;
 
-                            if (!songInfo.IsEmpty())
-                            {
-                                new ToastContentBuilder()
-                                    .AddArgument("artist", songInfo.Artist)
-                                    .AddArgument("track", songInfo.Title)
-                                    .AddText(songInfo.Artist + " / " + songInfo.Title)
-                                    .AddText(vm.Stations.LastPlayedStation.Name)
-                                    .AddAudio(new ToastAudio { Silent = true })
-                                    .Show();
-                            }
-                        }
-                        else
+                        if (!songInfo.IsEmpty())
                         {
-                            mw.Title = "WebRadio";
+                            new ToastContentBuilder()
+                                .AddArgument("artist", songInfo.Artist)
+                                .AddArgument("track", songInfo.Title)
+                                .AddText(songInfo.Artist + " / " + songInfo.Title)
+                                .AddText(vm.Stations.LastPlayedStation.Name)
+                                .AddAudio(new ToastAudio { Silent = true })
+                                .Show();
                         }
-                    });
-                }
+                    }
+                    else
+                    {
+                        mw.Title = "WebRadio";
+                    }
+                });
 
                 var topLevel = TopLevel.GetTopLevel(mw);
 
@@ -131,7 +125,7 @@ namespace WebRadio
 
         private static void SetupHotKeys(IClassicDesktopStyleApplicationLifetime lifetime, IDictionary<VirtualKeyCode, Action> hotKeyActions)
         {
-            var context = AvaloniaSynchronizationContext.Current;
+            var context = SynchronizationContext.Current;
 
             if (context == null)
             {

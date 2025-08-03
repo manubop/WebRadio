@@ -5,7 +5,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
-using Avalonia.Threading;
 using ReactiveUI;
 
 using WebRadio.ViewModels;
@@ -115,30 +114,25 @@ namespace WebRadio
                 ]
             };
 
-            var context = AvaloniaSynchronizationContext.Current;
-
-            if (context != null)
+            vm.WhenAnyValue(x => x.SongInfo, x => x.IsItemPlaying).Subscribe(x =>
             {
-                vm.WhenAnyValue(x => x.SongInfo, x => x.IsItemPlaying).ObserveOn(context).Subscribe(x =>
+                if (x.Item2)
                 {
-                    if (x.Item2)
-                    {
-                        var prepend = "";
-                        var songInfo = x.Item1;
+                    var prepend = "";
+                    var songInfo = x.Item1;
 
-                        if (!songInfo.IsEmpty())
-                        {
-                            prepend = songInfo.Artist + " / " + songInfo.Title + Environment.NewLine;
-                        }
-
-                        trayIcon.ToolTipText = prepend + vm.LastPlayedStation.Name;
-                    }
-                    else
+                    if (!songInfo.IsEmpty())
                     {
-                        trayIcon.ToolTipText = "WebRadio";
+                        prepend = songInfo.Artist + " / " + songInfo.Title + Environment.NewLine;
                     }
-                });
-            }
+
+                    trayIcon.ToolTipText = prepend + vm.LastPlayedStation.Name;
+                }
+                else
+                {
+                    trayIcon.ToolTipText = "WebRadio";
+                }
+            });
 
             SetValue(TrayIcon.IconsProperty, [trayIcon]);
         }

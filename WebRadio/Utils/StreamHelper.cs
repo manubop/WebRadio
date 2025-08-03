@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Un4seen.Bass;
 using WebRadio.ViewModels;
@@ -9,11 +10,11 @@ namespace WebRadio.Utils
 {
     static internal class StreamHelper
     {
-        public static IStream? CreateStream(string url, Options options, ILogger logger)
+        public static async Task<IRadioStream?> CreateStream(string url, Options options, ILogger logger)
         {
             logger.LogDebug("Opening {Url}", url);
 
-            var stream = Stream.Create(url, BASSFlag.BASS_STREAM_STATUS, (IntPtr buffer, int length, IntPtr user) =>
+            var stream = await RadioStream.Create(url, BASSFlag.BASS_STREAM_STATUS, (IntPtr buffer, int length, IntPtr user) =>
             {
                 if (buffer != IntPtr.Zero && length == 0 && options.ShowDownloadInfo)
                 {
