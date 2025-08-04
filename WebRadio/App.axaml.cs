@@ -153,119 +153,42 @@ namespace WebRadio
 
         private static void SetupShortcuts(InputElement topLevel, StationsViewModel stations, Window mw, IControlledApplicationLifetime lifetime)
         {
-            topLevel.KeyDown += (sender, args) =>
+            var actions = new Dictionary<Key, Action<KeyEventArgs>>()
             {
-                switch (args.Key)
+                { Key.Up, (args) => stations.SelectorUp(1) },
+                { Key.Down, (args) => stations.SelectorDown(1) },
+                { Key.PageUp, (args) => stations.SelectorUp(10) },
+                { Key.PageDown, (args) => stations.SelectorDown(10) },
+                { Key.Home, (args) => stations.SelectorTop() },
+                { Key.End, (args) => stations.SelectorBottom() },
+                { Key.Enter, (args) => stations.PlaySelectedItem() },
+                { Key.Back, (args) => stations.StopItem() },
+                { Key.Add, (args) => stations.VolumeUp(0.1f) },
+                { Key.Subtract, (args) => stations.VolumeDown(0.1f) },
                 {
-                    case Key.Up:
-                        if (stations.SelectedIndex > 0)
-                        {
-                            stations.SelectedIndex--;
-                        }
-                        break;
-                    case Key.Down:
-                        if (stations.SelectedIndex < stations.Model.Count - 1)
-                        {
-                            stations.SelectedIndex++;
-                        }
-                        break;
-                    case Key.PageUp:
-                        {
-                            var selectedIndex = stations.SelectedIndex;
-
-                            if (selectedIndex > 0)
-                            {
-                                selectedIndex -= 5;
-
-                                if (selectedIndex < 0)
-                                {
-                                    selectedIndex = 0;
-                                }
-
-                                stations.SelectedIndex = selectedIndex;
-                            }
-                        }
-                        break;
-                    case Key.PageDown:
-                        {
-                            var selectedIndex = stations.SelectedIndex;
-                            var max = stations.Model.Count - 1;
-
-                            if (selectedIndex < max)
-                            {
-                                selectedIndex += 5;
-
-                                if (selectedIndex > max)
-                                {
-                                    selectedIndex = max;
-                                }
-
-                                stations.SelectedIndex = selectedIndex;
-                            }
-                        }
-                        break;
-                    case Key.Home:
-                        if (stations.SelectedIndex > 0)
-                        {
-                            stations.SelectedIndex = 0;
-                        }
-                        break;
-                    case Key.End:
-                        if (stations.SelectedIndex < stations.Model.Count - 1)
-                        {
-                            stations.SelectedIndex = stations.Model.Count - 1;
-                        }
-                        break;
-                    case Key.Enter:
-                        stations.PlaySelectedItem();
-                        break;
-                    case Key.Back:
-                        stations.StopItem();
-                        break;
-                    case Key.Escape:
+                    Key.Escape, (args) =>
+                    {
                         mw.Hide();
                         mw.ShowInTaskbar = false;
-                        break;
-                    case Key.Subtract:
-                        {
-                            var vol = stations.Volume;
-
-                            if (vol > 0f)
-                            {
-                                vol -= 0.1f;
-
-                                if (vol < 0f)
-                                {
-                                    vol = 0f;
-                                }
-
-                                stations.Volume = vol;
-                            }
-                        }
-                        break;
-                    case Key.Add:
-                        {
-                            var vol = stations.Volume;
-
-                            if (vol < 1f)
-                            {
-                                vol += 0.1f;
-
-                                if (vol > 1f)
-                                {
-                                    vol = 1f;
-                                }
-
-                                stations.Volume = vol;
-                            }
-                        }
-                        break;
-                    case Key.Q:
+                    }
+                },
+                {
+                    Key.Q, (args) =>
+                    {
                         if (args.KeyModifiers == KeyModifiers.Control)
                         {
                             lifetime.Shutdown();
                         }
-                        break;
+                    }
+                }
+            };
+
+            topLevel.KeyDown += (sender, args) =>
+            {
+                if (actions.TryGetValue(args.Key, out Action<KeyEventArgs>? action))
+                {
+                    action.Invoke(args);
+                    args.Handled = true;
                 }
             };
         }

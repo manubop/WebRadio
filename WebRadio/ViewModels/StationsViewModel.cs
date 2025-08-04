@@ -104,6 +104,91 @@ namespace WebRadio.ViewModels
             Model.RemoveAt(SelectedIndex);
         }
 
+        public void SelectorTop()
+        {
+            if (SelectedIndex > 0)
+            {
+                SelectedIndex = 0;
+            }
+        }
+
+        public void SelectorBottom()
+        {
+            if (SelectedIndex < Model.Count - 1)
+            {
+                SelectedIndex = Model.Count - 1;
+            }
+        }
+
+        public void SelectorUp(int count)
+        {
+            var selectedIndex = SelectedIndex;
+
+            if (selectedIndex > 0)
+            {
+                selectedIndex -= count;
+
+                if (selectedIndex < 0)
+                {
+                    selectedIndex = 0;
+                }
+
+                SelectedIndex = selectedIndex;
+            }
+        }
+
+        public void SelectorDown(int count)
+        {
+            var selectedIndex = SelectedIndex;
+            var max = Model.Count - 1;
+
+            if (selectedIndex < max)
+            {
+                selectedIndex += count;
+
+                if (selectedIndex > max)
+                {
+                    selectedIndex = max;
+                }
+
+                SelectedIndex = selectedIndex;
+            }
+        }
+
+        public void VolumeUp(float count)
+        {
+            var vol = Volume;
+
+            if (vol < 1f)
+            {
+                vol += count;
+
+                if (vol > 1f)
+                {
+                    vol = 1f;
+                }
+
+                Volume = vol;
+            }
+        }
+
+        public void VolumeDown(float count)
+        {
+            var vol = Volume;
+
+            if (vol > 0f)
+            {
+                vol -= count;
+
+                if (vol < 0f)
+                {
+                    vol = 0f;
+                }
+
+                Volume = vol;
+            }
+        }
+
         float _volume = 1;
 
         public float Volume
