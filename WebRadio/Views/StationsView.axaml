@@ -40,6 +40,10 @@
 					<MenuItem Header="Play" Command="{Binding PlaySelectedItem}"/>
 				</ContextMenu>
 			</ListBox.ContextMenu>
+			<ListBox.KeyBindings>
+				<KeyBinding Gesture="PageUp" Command="{Binding SelectorUp}" CommandParameter="10"/>
+				<KeyBinding Gesture="PageDown" Command="{Binding SelectorDown}" CommandParameter="10"/>
+			</ListBox.KeyBindings>
 		</ListBox>
 	</DockPanel>
 </UserControl>
