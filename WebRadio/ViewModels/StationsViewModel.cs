@@ -315,18 +315,24 @@ namespace WebRadio.ViewModels
             {
                 _stream.Dispose();
                 _stream = null;
-
-                _appender?.Stop();
-                _appender?.Dispose();
-                _appender = null;
-
-                _downloader?.Dispose();
-                _downloader = null;
-
-                IsItemPlaying = false;
-
-                SongInfo = SongInfo.Empty;
             }
+
+            if (_appender != null)
+            {
+                _appender.Stop();
+                _appender.Dispose();
+                _appender = null;
+            }
+
+            if (_downloader != null)
+            {
+                _downloader.Dispose();
+                _downloader = null;
+            }
+
+            IsItemPlaying = false;
+
+            SongInfo = SongInfo.Empty;
         }
 
         public void PlayPauseItem()
