@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Un4seen.Bass;
 using Un4seen.Bass.AddOn.Tags;
+using WebRadio.DataModel;
 
 namespace WebRadio
 {
@@ -27,7 +28,7 @@ namespace WebRadio
         bool Stop();
         bool Play(bool restart);
         bool Pause();
-        int SetupTagDisplay(string url, Action<TAG_INFO> action);
+        int SetupTagDisplay(string url, Action<SongInfo> action);
     }
 
     internal sealed class RadioStream(int stream, DOWNLOADPROC downloadProc, params SYNCPROC[] syncProcs) : IRadioStream
@@ -92,13 +93,13 @@ namespace WebRadio
 
         public bool Pause() => Bass.BASS_ChannelPause(stream);
 
-        public int SetupTagDisplay(string url, Action<TAG_INFO> action)
+        public int SetupTagDisplay(string url, Action<SongInfo> action)
         {
             var tagInfo = new TAG_INFO(url);
 
             if (GetTagInfo(tagInfo))
             {
-                action(tagInfo);
+                action(new SongInfo(tagInfo.artist, tagInfo.title));
             }
 
             return SetSyncProc(BASSSync.BASS_SYNC_META, (handle, channel, data, user) =>
@@ -110,7 +111,7 @@ namespace WebRadio
                     return;
                 }
 
-                action(tagInfo);
+                action(new SongInfo(tagInfo.artist, tagInfo.title));
             });
         }
 

@@ -1,16 +1,14 @@
-﻿using Un4seen.Bass.AddOn.Tags;
-
-namespace WebRadio.DataModel
+﻿namespace WebRadio.DataModel
 {
-    public class SongInfo
+    public sealed class SongInfo(string artist = "", string title = "")
     {
-        public string Artist { get; set; } = string.Empty;
+        public string Artist { get => artist; }
 
-        public string Title { get; set; } = string.Empty;
+        public string Title { get => title; }
 
         public bool IsEmpty() => string.IsNullOrEmpty(Artist) || string.IsNullOrEmpty(Title);
 
-        public bool Equals(TAG_INFO tagInfo) => Artist.Equals(tagInfo.artist, System.StringComparison.Ordinal) && Title.Equals(tagInfo.title, System.StringComparison.Ordinal);
+        public bool Equals(SongInfo tagInfo) => Artist.Equals(tagInfo.Artist, System.StringComparison.Ordinal) && Title.Equals(tagInfo.Title, System.StringComparison.Ordinal);
 
         public static readonly SongInfo Empty = new();
     }

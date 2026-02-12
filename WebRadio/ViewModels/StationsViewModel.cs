@@ -232,22 +232,18 @@ namespace WebRadio.ViewModels
             }
         }
 
-        private void UpdateSongInfoFromTagInfo(TAG_INFO tagInfo)
+        private void UpdateSongInfoFromTagInfo(SongInfo songInfo)
         {
             Dispatcher.UIThread.Post(() =>
             {
-                if (SongInfo.Equals(tagInfo))
+                if (SongInfo.Equals(songInfo))
                 {
                     return;
                 }
 
-                _logger.LogInformation("New TAG_INFO: {Artist} / {Title}", tagInfo.artist, tagInfo.title);
+                _logger.LogInformation("New TAG_INFO: {Artist} / {Title}", songInfo.Artist, songInfo.Title);
 
-                SongInfo = new SongInfo
-                {
-                    Artist = tagInfo.artist,
-                    Title = tagInfo.title
-                };
+                SongInfo = songInfo;
             });
         }
 
@@ -292,7 +288,7 @@ namespace WebRadio.ViewModels
                     {
                         Dispatcher.UIThread.Post(() =>
                         {
-                            SongInfo = new SongInfo { Artist = args.Artist, Title = args.Title };
+                            SongInfo = new SongInfo(args.Artist, args.Title);
                         });
                     };
 
