@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Timers;
 
 using Avalonia.Threading;
 
@@ -25,40 +24,6 @@ namespace WebRadio.ViewModels
         public bool ShowICYTags { get; set; } = true;
     }
 
-    internal sealed class StationAppender(StationModel station, IRadioStream stream, int interval) : IDisposable
-    {
-        private readonly Timer _timer = new(interval) { AutoReset = true };
-
-        public void Start()
-        {
-            var start = DateTime.Now;
-
-            _timer.Elapsed += (_, _) =>
-            {
-                var diff = DateTime.Now - start;
-                var pos = stream.GetFilePosition(BASSStreamFilePosition.BASS_FILEPOS_DOWNLOAD);
-
-                station.Append = $"\u25B6 {diff.Hours:D2}:{diff.Minutes:D2}:{diff.Seconds:D2} / {StreamHelper.FormatBytes(pos)}";
-            };
-
-            _timer.Enabled = true;
-        }
-
-        public void Stop()
-        {
-            _timer.Stop();
-
-            station.Append = string.Empty;
-        }
-
-        public void Dispose()
-        {
-            _timer.Dispose();
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
     public class StationsViewModel : ViewModelBase, IDisposable
     {
         private readonly Options _options;
@@ -68,7 +33,7 @@ namespace WebRadio.ViewModels
 
         private ISongInfoDownloader? _downloader;
         private IRadioStream? _stream;
-        private StationAppender? _appender;
+        private IStationAppender? _appender;
 
         public StationsViewModel(IStationService service, Options options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory, IStationEditor stationEditor)
         {
@@ -348,9 +313,7 @@ namespace WebRadio.ViewModels
             _stream.SetAttribute(BASSAttribute.BASS_ATTRIB_VOL, Volume);
             _stream.Play(true);
 
-            _appender = new StationAppender(station, _stream, 100);
-
-            _appender.Start();
+            _appender = StationAppenderFactory.Create(station, _stream);
         }
 
         public void StopItem()
