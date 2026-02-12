@@ -25,6 +25,9 @@
 			<Button Command="{Binding StopItem}" IsEnabled="{Binding IsItemPlaying}">
 				Stop
 			</Button>
+			<Button Command="{Binding About}">
+				About
+			</Button>
 		</WrapPanel>
 		<Slider DockPanel.Dock="Top" Maximum="1" Value="{Binding Volume}" Margin="10,0,10,0"/>
 		<ListBox ItemsSource="{Binding Model}" SelectedIndex="{Binding SelectedIndex}" DoubleTapped="DoubleTappedHandler">

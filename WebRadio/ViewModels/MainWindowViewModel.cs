@@ -15,6 +15,7 @@ namespace WebRadio.ViewModels
     {
         void AddItem();
         void EditItem(StationModel current);
+        void About();
     }
 
     public class MainWindowViewModel : ViewModelBase, IStationEditor
@@ -83,6 +84,16 @@ namespace WebRadio.ViewModels
                     Api = current.Api,
                 }
             );
+        }
+
+        public void About()
+        {
+            var aboutViewModel = new AboutViewModel(_ =>
+            {
+                ContentViewModel = Stations;
+            });
+
+            ContentViewModel = aboutViewModel;
         }
     }
 }

@@ -104,6 +104,11 @@ namespace WebRadio.ViewModels
             Model.RemoveAt(SelectedIndex);
         }
 
+        public void About()
+        {
+            _stationEditor.About();
+        }
+
         public void SelectorTop()
         {
             if (SelectedIndex > 0)
