@@ -9,9 +9,6 @@ using Microsoft.Extensions.Logging;
 
 using ReactiveUI;
 
-using Un4seen.Bass;
-using Un4seen.Bass.AddOn.Tags;
-
 using WebRadio.DataModel;
 using WebRadio.Services;
 using WebRadio.Utils;
@@ -44,7 +41,7 @@ namespace WebRadio.ViewModels
                 service.Store(Model);
             };
 
-            this.WhenAnyValue(x => x.Volume).Subscribe(volume => _stream?.SetAttribute(BASSAttribute.BASS_ATTRIB_VOL, volume));
+            this.WhenAnyValue(x => x.Volume).Subscribe(volume => _stream?.SetVolume(volume));
 
             _options = options;
             _logger = loggerFactory.CreateLogger<StationsViewModel>();
@@ -306,7 +303,7 @@ namespace WebRadio.ViewModels
 
             IsItemPlaying = true;
 
-            _stream.SetAttribute(BASSAttribute.BASS_ATTRIB_VOL, Volume);
+            _stream.SetVolume(Volume);
             _stream.Play(true);
 
             _appender = StationAppenderFactory.Create(station, _stream);

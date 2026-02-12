@@ -20,8 +20,7 @@ namespace WebRadio
         string[] GetTagsHTTP();
         bool GetTagInfo(TAG_INFO tagInfo);
         int GetLevel();
-        bool GetAttribute(BASSAttribute attribute, ref float val);
-        bool SetAttribute(BASSAttribute attribute, float val);
+        bool SetVolume(float val);
         long GetDownloadFilePosition();
         BASSActive IsActive();
         bool Start();
@@ -77,9 +76,8 @@ namespace WebRadio
 
         public int GetLevel() => Bass.BASS_ChannelGetLevel(stream);
 
-        public bool GetAttribute(BASSAttribute attribute, ref float val) => Bass.BASS_ChannelGetAttribute(stream, attribute, ref val);
+        public bool SetVolume(float val) => Bass.BASS_ChannelSetAttribute(stream, BASSAttribute.BASS_ATTRIB_VOL, val);
 
-        public bool SetAttribute(BASSAttribute attribute, float val) => Bass.BASS_ChannelSetAttribute(stream, attribute, val);
         public long GetDownloadFilePosition() => Bass.BASS_StreamGetFilePosition(stream, BASSStreamFilePosition.BASS_FILEPOS_DOWNLOAD);
 
 
