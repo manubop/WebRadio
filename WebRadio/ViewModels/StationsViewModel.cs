@@ -373,6 +373,26 @@ namespace WebRadio.ViewModels
             PlayItem(SelectedIndex);
         }
 
+        public void MoveSelectedItemUp()
+        {
+            var selectedIndex = SelectedIndex;
+            if (selectedIndex > 0)
+            {
+                Model.Move(selectedIndex, selectedIndex - 1);
+                SelectedIndex = selectedIndex - 1;
+            }
+        }
+
+        public void MoveSelectedItemDown()
+        {
+            var selectedIndex = SelectedIndex;
+            if (selectedIndex < Model.Count - 1)
+            {
+                Model.Move(selectedIndex, selectedIndex + 1);
+                SelectedIndex = selectedIndex + 1;
+            }
+        }
+
         public void Dispose()
         {
             _stream?.Dispose();
