@@ -34,6 +34,76 @@ namespace WebRadio.ViewModels
         private IRadioStream? _stream;
         private IStationAppender? _appender;
 
+        private float _volume = 1;
+
+        public float Volume
+        {
+            get => _volume;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _volume, value);
+            }
+        }
+
+        private int _selectedIndex;
+
+        public int SelectedIndex
+        {
+            get => _selectedIndex;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedIndex, value);
+            }
+        }
+
+        private bool _isItemPlaying;
+
+        public bool IsItemPlaying
+        {
+            get => _isItemPlaying;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _isItemPlaying, value);
+            }
+        }
+
+        private int _lastPlayedIndex;
+
+        public int LastPlayedIndex
+        {
+            get => _lastPlayedIndex;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _lastPlayedIndex, value);
+            }
+        }
+
+        private SongInfo _songInfo = SongInfo.Empty;
+
+        public SongInfo SongInfo
+        {
+            get => _songInfo;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _songInfo, value);
+            }
+        }
+
+        private bool _buffering;
+
+        public bool Buffering
+        {
+            get => _buffering;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _buffering, value);
+            }
+        }
+
+        public ObservableCollection<StationModel> Model { get; }
+        public StationModel SelectedStation => Model[SelectedIndex];
+        public StationModel LastPlayedStation => Model[LastPlayedIndex];
+
         public ReactiveCommand<Unit, Unit> MoveSelectedItemUpCommand { get; }
         public ReactiveCommand<Unit, Unit> MoveSelectedItemDownCommand { get; }
         public ReactiveCommand<Unit, Unit> RemoveSelectedItemCommand { get; }
@@ -66,8 +136,6 @@ namespace WebRadio.ViewModels
                 (selectedIndex, lastPlayedIndex, isItemPlaying) => selectedIndex >= 0 && (!isItemPlaying || selectedIndex != lastPlayedIndex)));
             StopItemCommand = ReactiveCommand.Create(StopItem, this.WhenAnyValue(x => x.IsItemPlaying));
         }
-
-        public ObservableCollection<StationModel> Model { get; }
 
         public void AddNewItem()
         {
@@ -176,77 +244,6 @@ namespace WebRadio.ViewModels
                 }
 
                 Volume = vol;
-            }
-        }
-
-        float _volume = 1;
-
-        public float Volume
-        {
-            get => _volume;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _volume, value);
-            }
-        }
-
-        int _selectedIndex;
-
-        public int SelectedIndex
-        {
-            get => _selectedIndex;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _selectedIndex, value);
-                this.RaisePropertyChanged(nameof(IsItemSelected));
-            }
-        }
-
-        public StationModel SelectedStation => Model[_selectedIndex];
-
-        bool _isItemPlaying;
-
-        public bool IsItemPlaying
-        {
-            get => _isItemPlaying;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _isItemPlaying, value);
-            }
-        }
-
-        int _lastPlayedIndex;
-
-        public int LastPlayedIndex
-        {
-            get => _lastPlayedIndex;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _lastPlayedIndex, value);
-            }
-        }
-
-        public StationModel LastPlayedStation => Model[LastPlayedIndex];
-
-        private SongInfo _songInfo = SongInfo.Empty;
-
-        public SongInfo SongInfo
-        {
-            get => _songInfo;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _songInfo, value);
-            }
-        }
-
-        private bool _buffering;
-
-        public bool Buffering
-        {
-            get => _buffering;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _buffering, value);
             }
         }
 
