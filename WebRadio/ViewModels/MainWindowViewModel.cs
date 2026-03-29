@@ -22,9 +22,9 @@ namespace WebRadio.ViewModels
     {
         private ViewModelBase _contentViewModel;
 
-        public MainWindowViewModel(IStationService service, Options options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory)
+        public MainWindowViewModel(IStationService service, Options options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory, IDialogService dialogService)
         {
-            Stations = new(service, options, loggerFactory, songDownloaderFactory, this);
+            Stations = new(service, options, loggerFactory, songDownloaderFactory, this, dialogService);
 
             _contentViewModel = Stations;
         }

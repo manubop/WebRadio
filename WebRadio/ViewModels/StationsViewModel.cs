@@ -27,12 +27,13 @@ namespace WebRadio.ViewModels
         private readonly ILogger _logger;
         private readonly ISongDownloaderFactory _songDownloaderFactory;
         private readonly IStationEditor _stationEditor;
+        private readonly IDialogService _dialogService;
 
         private ISongInfoDownloader? _downloader;
         private IRadioStream? _stream;
         private IStationAppender? _appender;
 
-        public StationsViewModel(IStationService service, Options options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory, IStationEditor stationEditor)
+        public StationsViewModel(IStationService service, Options options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory, IStationEditor stationEditor, IDialogService dialogService)
         {
             Model = [.. service.Load().Select(s => new StationModel(s))];
 
@@ -47,6 +48,7 @@ namespace WebRadio.ViewModels
             _logger = loggerFactory.CreateLogger<StationsViewModel>();
             _songDownloaderFactory = songDownloaderFactory;
             _stationEditor = stationEditor;
+            _dialogService = dialogService;
         }
 
         public ObservableCollection<StationModel> Model { get; }
@@ -61,9 +63,14 @@ namespace WebRadio.ViewModels
             _stationEditor.EditItem(SelectedStation);
         }
 
-        public void RemoveSelectedItem()
+        public async void RemoveSelectedItem()
         {
-            Model.RemoveAt(SelectedIndex);
+            var confirmed = await _dialogService.ShowConfirmationDialog("Delete selected item ?");
+
+            if (confirmed)
+            {
+                Model.RemoveAt(SelectedIndex);
+            }
         }
 
         public void About()

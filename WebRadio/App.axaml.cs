@@ -54,11 +54,14 @@ namespace WebRadio
                 var service = new StationsService(stationsFilename);
                 var options = new Options();
                 var songDownloaderFactory = new SongDownloaderFactory(loggerFactory);
-                var vm = new MainWindowViewModel(service, options, loggerFactory, songDownloaderFactory);
+                var dialogService = new DialogService();
+                var vm = new MainWindowViewModel(service, options, loggerFactory, songDownloaderFactory, dialogService);
                 var mw = new MainWindow
                 {
                     DataContext = vm,
                 };
+
+                dialogService.Parent = mw;
 
                 vm.Stations.WhenAnyValue(x => x.SongInfo, x => x.IsItemPlaying).Subscribe(x =>
                 {
