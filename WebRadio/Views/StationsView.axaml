@@ -13,16 +13,16 @@
 			<Button Command="{Binding AddNewItem}">
 				Add
 			</Button>
-			<Button Command="{Binding RemoveSelectedItem}" IsEnabled="{Binding IsItemSelected}">
+			<Button Command="{Binding RemoveSelectedItemCommand}">
 				Remove
 			</Button>
-			<Button Command="{Binding EditSelectedItem}" IsEnabled="{Binding IsItemSelected}">
+			<Button Command="{Binding EditSelectedItemCommand}">
 				Edit
 			</Button>
-			<Button Command="{Binding PlaySelectedItem}" IsEnabled="{Binding IsItemSelected}">
+			<Button Command="{Binding PlaySelectedItemCommand}">
 				Play
 			</Button>
-			<Button Command="{Binding StopItem}" IsEnabled="{Binding IsItemPlaying}">
+			<Button Command="{Binding StopItemCommand}">
 				Stop
 			</Button>
 			<Button Command="{Binding About}">
@@ -38,11 +38,11 @@
 			</ListBox.ItemTemplate>
 			<ListBox.ContextMenu>
 				<ContextMenu>
-					<MenuItem Header="Edit" Command="{Binding EditSelectedItem}"/>
-					<MenuItem Header="Remove" Command="{Binding RemoveSelectedItem}"/>
-					<MenuItem Header="Play" Command="{Binding PlaySelectedItem}"/>
-					<MenuItem Header="Move Up" Command="{Binding MoveSelectedItemUp}"/>
-					<MenuItem Header="Move Down" Command="{Binding MoveSelectedItemDown}"/>
+					<MenuItem Header="Edit" Command="{Binding EditSelectedItemCommand}"/>
+					<MenuItem Header="Remove" Command="{Binding RemoveSelectedItemCommand}"/>
+					<MenuItem Header="Play" Command="{Binding PlaySelectedItemCommand}"/>
+					<MenuItem Header="Move Up" Command="{Binding MoveSelectedItemUpCommand}"/>
+					<MenuItem Header="Move Down" Command="{Binding MoveSelectedItemDownCommand}"/>
 				</ContextMenu>
 			</ListBox.ContextMenu>
 			<ListBox.KeyBindings>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 
 using Avalonia.Threading;
@@ -33,6 +34,13 @@ namespace WebRadio.ViewModels
         private IRadioStream? _stream;
         private IStationAppender? _appender;
 
+        public ReactiveCommand<Unit, Unit> MoveSelectedItemUpCommand { get; }
+        public ReactiveCommand<Unit, Unit> MoveSelectedItemDownCommand { get; }
+        public ReactiveCommand<Unit, Unit> RemoveSelectedItemCommand { get; }
+        public ReactiveCommand<Unit, Unit> EditSelectedItemCommand { get; }
+        public ReactiveCommand<Unit, Unit> PlaySelectedItemCommand { get; }
+        public ReactiveCommand<Unit, Unit> StopItemCommand { get; }
+
         public StationsViewModel(IStationService service, Options options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory, IStationEditor stationEditor, IDialogService dialogService)
         {
             Model = [.. service.Load().Select(s => new StationModel(s))];
@@ -49,6 +57,14 @@ namespace WebRadio.ViewModels
             _songDownloaderFactory = songDownloaderFactory;
             _stationEditor = stationEditor;
             _dialogService = dialogService;
+
+            MoveSelectedItemUpCommand = ReactiveCommand.Create(MoveSelectedItemUp, this.WhenAnyValue(x => x.SelectedIndex, selectedIndex => selectedIndex > 0));
+            MoveSelectedItemDownCommand = ReactiveCommand.Create(MoveSelectedItemDown, this.WhenAnyValue(x => x.SelectedIndex, selectedIndex => selectedIndex < Model.Count - 1));
+            RemoveSelectedItemCommand = ReactiveCommand.Create(RemoveSelectedItem, this.WhenAnyValue(x => x.SelectedIndex, selectedIndex => selectedIndex >= 0));
+            EditSelectedItemCommand = ReactiveCommand.Create(EditSelectedItem, this.WhenAnyValue(x => x.SelectedIndex, selectedIndex => selectedIndex >= 0));
+            PlaySelectedItemCommand = ReactiveCommand.Create(PlaySelectedItem, this.WhenAnyValue(x => x.SelectedIndex, x => x.LastPlayedIndex, x => x.IsItemPlaying,
+                (selectedIndex, lastPlayedIndex, isItemPlaying) => selectedIndex >= 0 && (!isItemPlaying || selectedIndex != lastPlayedIndex)));
+            StopItemCommand = ReactiveCommand.Create(StopItem, this.WhenAnyValue(x => x.IsItemPlaying));
         }
 
         public ObservableCollection<StationModel> Model { get; }
@@ -187,8 +203,6 @@ namespace WebRadio.ViewModels
         }
 
         public StationModel SelectedStation => Model[_selectedIndex];
-
-        public bool IsItemSelected => _selectedIndex >= 0;
 
         bool _isItemPlaying;
 
