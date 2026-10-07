@@ -1,6 +1,5 @@
 ﻿using System;
 using Avalonia;
-using ReactiveUI.Avalonia;
 
 namespace WebRadio
 {
@@ -18,7 +17,6 @@ namespace WebRadio
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .WithInterFont()
-                .LogToTrace()
-                .UseReactiveUI();
+                .LogToTrace();
     }
 }

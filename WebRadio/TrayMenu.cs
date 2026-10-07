@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
-using ReactiveUI;
+using CommunityToolkit.Mvvm.Input;
 
 using WebRadio.ViewModels;
 using WebRadio.Views;
@@ -21,59 +20,69 @@ namespace WebRadio
                 IsVisible = true,
                 ToolTipText = "WebRadio",
                 Icon = new WindowIcon(new Bitmap(AssetLoader.Open(new Uri("avares://WebRadio/Assets/avalonia-logo.ico")))),
-                Command = ReactiveCommand.Create(() => mainWindow.ToggleVisibility()),
+                Command = new RelayCommand(mainWindow.ToggleVisibility),
                 Menu =
                 [
                     new NativeMenuItem
                     {
                         Header = "Play",
-                        Command = ReactiveCommand.Create(() => vm.PlayLastPlayedItem(), vm.WhenAnyValue(x => x.IsItemPlaying, x => !x))
+                        Command = vm.PlayLastPlayedItemCommand
                     },
                     new NativeMenuItem
                     {
                         Header = "Stop",
-                        Command = ReactiveCommand.Create(() => vm.StopItem(), vm.WhenAnyValue(x => x.IsItemPlaying))
+                        Command = vm.StopItemCommand
                     },
                     new NativeMenuItem
                     {
                         Header = "Prev",
-                        Command = ReactiveCommand.Create(() => vm.PlayPrevItem(), vm.WhenAnyValue(x => x.LastPlayedIndex, x => x > 0))
+                        Command = vm.PlayPrevItemCommand,
                     },
                     new NativeMenuItem
                     {
                         Header = "Next",
-                        Command = ReactiveCommand.Create(() => vm.PlayNextItem(), vm.WhenAnyValue(x => x.LastPlayedIndex, x => x < vm.Model.Count - 1))
+                        Command = vm.PlayNextItemCommand
                     },
                     new NativeMenuItemSeparator(),
                     new NativeMenuItem
                     {
                         Header = "Exit",
-                        Command = ReactiveCommand.Create(() => lifetime.Shutdown())
+                        Command = new RelayCommand(() => lifetime.Shutdown())
                     }
                 ]
             };
 
-            vm.WhenAnyValue(x => x.SongInfo, x => x.IsItemPlaying).Subscribe(x =>
+            vm.PropertyChanged += (_, args) =>
             {
-                if (x.Item2)
+                if (args.PropertyName is nameof(StationsViewModel.SongInfo) or nameof(StationsViewModel.IsItemPlaying))
                 {
-                    var prepend = "";
-                    var songInfo = x.Item1;
-
-                    if (!songInfo.IsEmpty())
-                    {
-                        prepend = songInfo.Artist + " / " + songInfo.Title + Environment.NewLine;
-                    }
-
-                    trayIcon.ToolTipText = prepend + vm.LastPlayedStation.Name;
+                    UpdateTrayIconToolTip(vm, trayIcon);
                 }
-                else
-                {
-                    trayIcon.ToolTipText = "WebRadio";
-                }
-            });
+            };
 
             SetValue(TrayIcon.IconsProperty, [trayIcon]);
+        }
+
+        private static void UpdateTrayIconToolTip(StationsViewModel vm, TrayIcon trayIcon)
+        {
+            if (!vm.IsItemPlaying)
+            {
+                trayIcon.ToolTipText = "WebRadio";
+                return;
+            }
+
+            var songInfo = vm.SongInfo;
+            var prepend = string.Empty;
+
+            if (!songInfo.IsEmpty())
+            {
+                prepend = songInfo.Artist
+                    + " / "
+                    + songInfo.Title
+                    + Environment.NewLine;
+            }
+
+            trayIcon.ToolTipText = prepend + vm.LastPlayedStation.Name;
         }
     }
 }

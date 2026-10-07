@@ -16,8 +16,6 @@ using GlobalHotKeys.Native.Types;
 using Microsoft.Extensions.Logging;
 using Microsoft.Toolkit.Uwp.Notifications;
 
-using ReactiveUI;
-
 using Un4seen.Bass;
 
 using WebRadio.Services;
@@ -63,30 +61,13 @@ namespace WebRadio
 
                 dialogService.Parent = mw;
 
-                vm.Stations.WhenAnyValue(x => x.SongInfo, x => x.IsItemPlaying).Subscribe(x =>
+                vm.Stations.PropertyChanged += (_, args) =>
                 {
-                    if (x.Item2)
+                    if (args.PropertyName is nameof(StationsViewModel.SongInfo) or nameof(StationsViewModel.IsItemPlaying))
                     {
-                        var songInfo = x.Item1;
-
-                        mw.Title = songInfo.IsEmpty() ? vm.Stations.LastPlayedStation.Name : songInfo.Artist + " / " + songInfo.Title;
-
-                        if (!songInfo.IsEmpty())
-                        {
-                            new ToastContentBuilder()
-                                .AddArgument("artist", songInfo.Artist)
-                                .AddArgument("track", songInfo.Title)
-                                .AddText(songInfo.Artist + " / " + songInfo.Title)
-                                .AddText(vm.Stations.LastPlayedStation.Name)
-                                .AddAudio(new ToastAudio { Silent = true })
-                                .Show();
-                        }
+                        UpdateWindowTitle(vm.Stations, mw);
                     }
-                    else
-                    {
-                        mw.Title = "WebRadio";
-                    }
-                });
+                };
 
                 var topLevel = TopLevel.GetTopLevel(mw);
 
@@ -253,6 +234,30 @@ namespace WebRadio
 
             Bass.BASS_Stop();
             Bass.BASS_Free();
+        }
+
+        private static void UpdateWindowTitle(StationsViewModel stations, Window mw)
+        {
+            if (!stations.IsItemPlaying)
+            {
+                mw.Title = "WebRadio";
+                return;
+            }
+
+            var songInfo = stations.SongInfo;
+
+            mw.Title = songInfo.IsEmpty() ? stations.LastPlayedStation.Name : songInfo.Artist + " / " + songInfo.Title;
+
+            if (!songInfo.IsEmpty())
+            {
+                new ToastContentBuilder()
+                    .AddArgument("artist", songInfo.Artist)
+                    .AddArgument("track", songInfo.Title)
+                    .AddText(songInfo.Artist + " / " + songInfo.Title)
+                    .AddText(stations.LastPlayedStation.Name)
+                    .AddAudio(new ToastAudio { Silent = true })
+                    .Show();
+            }
         }
     }
 }

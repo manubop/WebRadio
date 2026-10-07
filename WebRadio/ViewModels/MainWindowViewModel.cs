@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Reactive.Linq;
 
 using Microsoft.Extensions.Logging;
-
-using ReactiveUI;
 
 using WebRadio.DataModel;
 using WebRadio.Services;
@@ -34,66 +31,55 @@ namespace WebRadio.ViewModels
         public ViewModelBase ContentViewModel
         {
             get => _contentViewModel;
-            private set => this.RaiseAndSetIfChanged(ref _contentViewModel, value);
-        }
-
-        private void AddOrEditItem(Action<StationModel> action, AddStationViewModel? addItemViewModel = null)
-        {
-            addItemViewModel ??= new AddStationViewModel();
-
-            Observable.Merge(addItemViewModel.OkCommand, addItemViewModel.CancelCommand)
-                .Take(1)
-                .Subscribe(station =>
-                {
-                    if (station.IsValid())
-                    {
-                        action(station);
-                    }
-                    ContentViewModel = Stations;
-                });
-
-            ContentViewModel = addItemViewModel;
+            private set => SetProperty(ref _contentViewModel, value);
         }
 
         public void AddItem()
         {
-            AddOrEditItem(station =>
+            ContentViewModel = new AddStationViewModel(Handle(station =>
             {
                 Stations.Model.Add(station);
 
                 Stations.SelectedIndex = Stations.Model.Count - 1;
-            });
+            }));
         }
 
         public void EditItem(StationModel current)
         {
-            AddOrEditItem(
-                station =>
-                {
-                    var selectedIndex = Stations.SelectedIndex;
+            ContentViewModel = new AddStationViewModel(Handle(station =>
+            {
+                var selectedIndex = Stations.SelectedIndex;
 
-                    Stations.Model[selectedIndex] = station;
+                Stations.Model[selectedIndex] = station;
 
-                    Stations.SelectedIndex = selectedIndex;
-                },
-                new AddStationViewModel
-                {
-                    Name = current.Name,
-                    Url = current.Url,
-                    Description = current.Description,
-                    Api = current.Api,
-                }
-            );
+                Stations.SelectedIndex = selectedIndex;
+            }))
+            {
+                Name = current.Name,
+                Url = current.Url,
+                Description = current.Description,
+                Api = current.Api,
+            };
         }
 
         public void About()
         {
-            var aboutViewModel = new AboutViewModel(_ =>
+            var aboutViewModel = new AboutViewModel(() =>
             {
                 ContentViewModel = Stations;
             });
 
             ContentViewModel = aboutViewModel;
         }
+
+        private Action<StationModel> Handle(Action<StationModel> action) => station =>
+        {
+            if (station.IsValid())
+            {
+                action(station);
+            }
+
+            ContentViewModel = Stations;
+        };
     }
 }

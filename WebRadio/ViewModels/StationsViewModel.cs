@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
 
 using Avalonia.Threading;
 
 using Microsoft.Extensions.Logging;
 
-using ReactiveUI;
+using CommunityToolkit.Mvvm.Input;
 
 using WebRadio.DataModel;
 using WebRadio.Services;
@@ -41,7 +40,10 @@ namespace WebRadio.ViewModels
             get => _volume;
             set
             {
-                this.RaiseAndSetIfChanged(ref _volume, value);
+                if (SetProperty(ref _volume, value))
+                {
+                    _stream?.SetVolume(value);
+                }
             }
         }
 
@@ -52,7 +54,14 @@ namespace WebRadio.ViewModels
             get => _selectedIndex;
             set
             {
-                this.RaiseAndSetIfChanged(ref _selectedIndex, value);
+                if (SetProperty(ref _selectedIndex, value))
+                {
+                    MoveSelectedItemUpCommand.NotifyCanExecuteChanged();
+                    MoveSelectedItemDownCommand.NotifyCanExecuteChanged();
+                    RemoveSelectedItemCommand.NotifyCanExecuteChanged();
+                    EditSelectedItemCommand.NotifyCanExecuteChanged();
+                    PlaySelectedItemCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
@@ -63,7 +72,12 @@ namespace WebRadio.ViewModels
             get => _isItemPlaying;
             set
             {
-                this.RaiseAndSetIfChanged(ref _isItemPlaying, value);
+                if (SetProperty(ref _isItemPlaying, value))
+                {
+                    StopItemCommand.NotifyCanExecuteChanged();
+                    PlaySelectedItemCommand.NotifyCanExecuteChanged();
+                    PlayLastPlayedItemCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
@@ -74,7 +88,12 @@ namespace WebRadio.ViewModels
             get => _lastPlayedIndex;
             set
             {
-                this.RaiseAndSetIfChanged(ref _lastPlayedIndex, value);
+                if (SetProperty(ref _lastPlayedIndex, value))
+                {
+                    PlayLastPlayedItemCommand.NotifyCanExecuteChanged();
+                    PlayPrevItemCommand.NotifyCanExecuteChanged();
+                    PlayNextItemCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
@@ -85,7 +104,7 @@ namespace WebRadio.ViewModels
             get => _songInfo;
             set
             {
-                this.RaiseAndSetIfChanged(ref _songInfo, value);
+                SetProperty(ref _songInfo, value);
             }
         }
 
@@ -96,7 +115,7 @@ namespace WebRadio.ViewModels
             get => _buffering;
             set
             {
-                this.RaiseAndSetIfChanged(ref _buffering, value);
+                SetProperty(ref _buffering, value);
             }
         }
 
@@ -104,12 +123,15 @@ namespace WebRadio.ViewModels
         public StationModel SelectedStation => Model[SelectedIndex];
         public StationModel LastPlayedStation => Model[LastPlayedIndex];
 
-        public ReactiveCommand<Unit, Unit> MoveSelectedItemUpCommand { get; }
-        public ReactiveCommand<Unit, Unit> MoveSelectedItemDownCommand { get; }
-        public ReactiveCommand<Unit, Unit> RemoveSelectedItemCommand { get; }
-        public ReactiveCommand<Unit, Unit> EditSelectedItemCommand { get; }
-        public ReactiveCommand<Unit, Unit> PlaySelectedItemCommand { get; }
-        public ReactiveCommand<Unit, Unit> StopItemCommand { get; }
+        public IRelayCommand MoveSelectedItemUpCommand { get; }
+        public IRelayCommand MoveSelectedItemDownCommand { get; }
+        public IRelayCommand RemoveSelectedItemCommand { get; }
+        public IRelayCommand EditSelectedItemCommand { get; }
+        public IRelayCommand PlaySelectedItemCommand { get; }
+        public IRelayCommand StopItemCommand { get; }
+        public IRelayCommand PlayLastPlayedItemCommand { get; }
+        public IRelayCommand PlayPrevItemCommand { get; }
+        public IRelayCommand PlayNextItemCommand { get; }
 
         public StationsViewModel(IStationService service, Options options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory, IStationEditor stationEditor, IDialogService dialogService)
         {
@@ -120,21 +142,21 @@ namespace WebRadio.ViewModels
                 service.Store(Model);
             };
 
-            this.WhenAnyValue(x => x.Volume).Subscribe(volume => _stream?.SetVolume(volume));
-
             _options = options;
             _logger = loggerFactory.CreateLogger<StationsViewModel>();
             _songDownloaderFactory = songDownloaderFactory;
             _stationEditor = stationEditor;
             _dialogService = dialogService;
 
-            MoveSelectedItemUpCommand = ReactiveCommand.Create(MoveSelectedItemUp, this.WhenAnyValue(x => x.SelectedIndex, selectedIndex => selectedIndex > 0));
-            MoveSelectedItemDownCommand = ReactiveCommand.Create(MoveSelectedItemDown, this.WhenAnyValue(x => x.SelectedIndex, selectedIndex => selectedIndex < Model.Count - 1));
-            RemoveSelectedItemCommand = ReactiveCommand.Create(RemoveSelectedItem, this.WhenAnyValue(x => x.SelectedIndex, selectedIndex => selectedIndex >= 0));
-            EditSelectedItemCommand = ReactiveCommand.Create(EditSelectedItem, this.WhenAnyValue(x => x.SelectedIndex, selectedIndex => selectedIndex >= 0));
-            PlaySelectedItemCommand = ReactiveCommand.Create(PlaySelectedItem, this.WhenAnyValue(x => x.SelectedIndex, x => x.LastPlayedIndex, x => x.IsItemPlaying,
-                (selectedIndex, lastPlayedIndex, isItemPlaying) => selectedIndex >= 0 && (!isItemPlaying || selectedIndex != lastPlayedIndex)));
-            StopItemCommand = ReactiveCommand.Create(StopItem, this.WhenAnyValue(x => x.IsItemPlaying));
+            MoveSelectedItemUpCommand = new RelayCommand(MoveSelectedItemUp, () => SelectedIndex > 0);
+            MoveSelectedItemDownCommand = new RelayCommand(MoveSelectedItemDown, () => SelectedIndex < Model.Count - 1);
+            RemoveSelectedItemCommand = new RelayCommand(RemoveSelectedItem, () => SelectedIndex >= 0);
+            EditSelectedItemCommand = new RelayCommand(EditSelectedItem, () => SelectedIndex >= 0);
+            PlaySelectedItemCommand = new RelayCommand(PlaySelectedItem, () => SelectedIndex >= 0 && (!IsItemPlaying || SelectedIndex != LastPlayedIndex));
+            StopItemCommand = new RelayCommand(StopItem, () => IsItemPlaying);
+            PlayLastPlayedItemCommand = new RelayCommand(PlayLastPlayedItem, () => !IsItemPlaying);
+            PlayPrevItemCommand = new RelayCommand(PlayPrevItem, () => LastPlayedIndex > 0);
+            PlayNextItemCommand = new RelayCommand(PlayNextItem, () => LastPlayedIndex < Model.Count - 1);
         }
 
         public void AddNewItem()

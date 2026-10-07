@@ -1,6 +1,5 @@
-﻿using System.Reactive;
-
-using ReactiveUI;
+﻿using System;
+using CommunityToolkit.Mvvm.Input;
 
 using WebRadio.DataModel;
 
@@ -13,42 +12,67 @@ namespace WebRadio.ViewModels
         private string _description = string.Empty;
         private string _api = string.Empty;
 
+        private readonly Action<StationModel> _stationCreated;
+
         public string Name
         {
             get => _name;
-            set => this.RaiseAndSetIfChanged(ref _name, value);
+            set
+            {
+                if (SetProperty(ref _name, value))
+                {
+                    OkCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         public string Url
         {
             get => _url;
-            set => this.RaiseAndSetIfChanged(ref _url, value);
+            set
+            {
+                if (SetProperty(ref _url, value))
+                {
+                    OkCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         public string Description
         {
             get => _description;
-            set => this.RaiseAndSetIfChanged(ref _description, value);
+            set => SetProperty(ref _description, value);
         }
 
         public string Api
         {
             get => _api;
-            set => this.RaiseAndSetIfChanged(ref _api, value);
+            set => SetProperty(ref _api, value);
         }
 
-        public ReactiveCommand<Unit, StationModel> OkCommand { get; }
+        public IRelayCommand OkCommand { get; }
 
-        public ReactiveCommand<Unit, StationModel> CancelCommand { get; }
+        public IRelayCommand CancelCommand { get; }
 
-        public AddStationViewModel()
+        public AddStationViewModel(Action<StationModel> stationCreated)
         {
-            var isValidObservable = this.WhenAnyValue(x => x.Name, x => x.Url, (name, url) => StationModel.IsValid(name, url));
+            _stationCreated = stationCreated;
 
-            OkCommand = ReactiveCommand.Create(
-                () => new StationModel { Name = Name, Url = Url, Description = Description, Api = Api }, isValidObservable
-            );
-            CancelCommand = ReactiveCommand.Create(() => StationModel.Empty);
+            OkCommand = new RelayCommand(CreateStation, CanCreateStation);
+            CancelCommand = new RelayCommand(() => _stationCreated(StationModel.Empty));
+        }
+
+        private bool CanCreateStation() => StationModel.IsValid(Name, Url);
+
+        private void CreateStation()
+        {
+            _stationCreated(new StationModel
+            {
+                Name = Name,
+                Url = Url,
+                Description = Description,
+                Api = Api
+            });
         }
     }
 }

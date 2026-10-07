@@ -1,6 +1,6 @@
 ﻿using System;
 
-using ReactiveUI;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace WebRadio.DataModel
 {
@@ -26,8 +26,10 @@ namespace WebRadio.DataModel
         public string Api { get; set; } = string.Empty;
     }
 
-    public class StationModel : ReactiveObject, IStationModel
+    public partial class StationModel : ObservableObject, IStationModel
     {
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(Concat))]
         private string _append = string.Empty;
 
         public StationModel() { }
@@ -53,16 +55,6 @@ namespace WebRadio.DataModel
         public static bool IsValid(string name, string url) => !string.IsNullOrEmpty(name) && Uri.IsWellFormedUriString(url, UriKind.Absolute);
 
         public static readonly StationModel Empty = new();
-
-        public string Append
-        {
-            get => _append;
-            set
-            {
-                _append = value;
-                this.RaisePropertyChanged(nameof(Concat));
-            }
-        }
 
         public string Concat { get => Name + ' ' + Append; }
     }
