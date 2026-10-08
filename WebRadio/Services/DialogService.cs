@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Avalonia.Controls;
+using WebRadio.Views;
 using WebRadio.ViewModels;
 
 namespace WebRadio.Services
@@ -20,10 +21,9 @@ namespace WebRadio.Services
                 return false;
             }
 
-            var dialog = new ConfirmationDialog();
-            var vm = new ConfirmationDialogViewModel(dialog, message);
+            var dialog = new ConfirmationView();
 
-            dialog.DataContext = vm;
+            dialog.DataContext = new ConfirmationViewModel(message, () => dialog.Close(true), () => dialog.Close(false));
 
             var result = await dialog.ShowDialog<bool?>(topLevel);
 
