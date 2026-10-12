@@ -15,15 +15,9 @@ using WebRadio.Utils;
 
 namespace WebRadio.ViewModels
 {
-    public class Options
-    {
-        public bool ShowDownloadInfo { get; set; } = true;
-        public bool ShowICYTags { get; set; } = true;
-    }
-
     public class StationsViewModel : ViewModelBase, IDisposable
     {
-        private readonly Options _options;
+        private readonly IOptions _options;
         private readonly ILogger _logger;
         private readonly ISongDownloaderFactory _songDownloaderFactory;
         private readonly IStationEditor _stationEditor;
@@ -133,7 +127,7 @@ namespace WebRadio.ViewModels
         public IRelayCommand PlayPrevItemCommand { get; }
         public IRelayCommand PlayNextItemCommand { get; }
 
-        public StationsViewModel(IStationService service, Options options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory, IStationEditor stationEditor, IDialogService dialogService)
+        public StationsViewModel(IStationService service, IOptions options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory, IStationEditor stationEditor, IDialogService dialogService)
         {
             Model = [.. service.Load().Select(s => new StationModel(s))];
 

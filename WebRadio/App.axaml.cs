@@ -18,6 +18,7 @@ using Microsoft.Toolkit.Uwp.Notifications;
 
 using Un4seen.Bass;
 
+using WebRadio.DataModel;
 using WebRadio.Services;
 using WebRadio.Utils;
 using WebRadio.ViewModels;

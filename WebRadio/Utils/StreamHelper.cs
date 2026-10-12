@@ -4,13 +4,13 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Un4seen.Bass;
-using WebRadio.ViewModels;
+using WebRadio.DataModel;
 
 namespace WebRadio.Utils
 {
     static internal class StreamHelper
     {
-        public static async Task<IRadioStream?> CreateStream(string url, Options options, ILogger logger)
+        public static async Task<IRadioStream?> CreateStream(string url, IOptions options, ILogger logger)
         {
             logger.LogDebug("Opening {Url}", url);
 
