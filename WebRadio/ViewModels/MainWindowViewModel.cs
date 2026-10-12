@@ -11,7 +11,7 @@ namespace WebRadio.ViewModels
     public interface IStationEditor
     {
         void AddItem();
-        void EditItem(StationModel current);
+        void EditItem(IStationModel current);
         void About();
     }
 
@@ -34,26 +34,41 @@ namespace WebRadio.ViewModels
             private set => SetProperty(ref _contentViewModel, value);
         }
 
+        private static bool CanCreateStation(IStationModel station) => !string.IsNullOrEmpty(station.Name) && Uri.IsWellFormedUriString(station.Url, UriKind.Absolute);
+
         public void AddItem()
         {
-            ContentViewModel = new AddStationViewModel(Handle(station =>
+            void Handler(IStationModel station, bool ok)
             {
-                Stations.Model.Add(station);
+                if (ok)
+                {
+                    Stations.Model.Add(new StationModel(station));
+                    Stations.SelectedIndex = Stations.Model.Count - 1;
+                }
 
-                Stations.SelectedIndex = Stations.Model.Count - 1;
-            }));
+                ContentViewModel = Stations;
+            }
+
+            ContentViewModel = new EditStationViewModel(Handler, CanCreateStation);
         }
 
-        public void EditItem(StationModel current)
+        public void EditItem(IStationModel current)
         {
-            ContentViewModel = new AddStationViewModel(Handle(station =>
+            void Handler(IStationModel station, bool ok)
             {
-                var selectedIndex = Stations.SelectedIndex;
+                if (ok)
+                {
+                    var selectedIndex = Stations.SelectedIndex;
 
-                Stations.Model[selectedIndex] = station;
+                    Stations.Model[selectedIndex] = new StationModel(station);
 
-                Stations.SelectedIndex = selectedIndex;
-            }))
+                    Stations.SelectedIndex = selectedIndex;
+                }
+
+                ContentViewModel = Stations;
+            }
+
+            ContentViewModel = new EditStationViewModel(Handler, CanCreateStation)
             {
                 Name = current.Name,
                 Url = current.Url,
@@ -71,15 +86,5 @@ namespace WebRadio.ViewModels
 
             ContentViewModel = aboutViewModel;
         }
-
-        private Action<StationModel> Handle(Action<StationModel> action) => station =>
-        {
-            if (station.IsValid())
-            {
-                action(station);
-            }
-
-            ContentViewModel = Stations;
-        };
     }
 }

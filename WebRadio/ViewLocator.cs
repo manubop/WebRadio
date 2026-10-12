@@ -10,7 +10,7 @@ namespace WebRadio
         public Control? Build(object? param) => param switch
         {
             AboutViewModel => new Views.AboutView(),
-            AddStationViewModel => new Views.AddStationView(),
+            EditStationViewModel => new Views.EditStationView(),
             ConfirmationViewModel => new Views.ConfirmationView(),
             MainWindowViewModel => new Views.MainWindow(),
             StationsViewModel => new Views.StationsView(),

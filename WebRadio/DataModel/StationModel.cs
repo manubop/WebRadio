@@ -50,12 +50,6 @@ namespace WebRadio.DataModel
 
         public string Api { get; set; } = string.Empty;
 
-        public bool IsValid() => IsValid(Name, Url);
-
-        public static bool IsValid(string name, string url) => !string.IsNullOrEmpty(name) && Uri.IsWellFormedUriString(url, UriKind.Absolute);
-
-        public static readonly StationModel Empty = new();
-
         public string Concat { get => Name + ' ' + Append; }
     }
 }
