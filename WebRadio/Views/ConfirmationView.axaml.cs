@@ -2,7 +2,7 @@ using Avalonia.Controls;
 
 namespace WebRadio.Views;
 
-public partial class ConfirmationView : Window
+public partial class ConfirmationView : UserControl
 {
     public ConfirmationView()
     {

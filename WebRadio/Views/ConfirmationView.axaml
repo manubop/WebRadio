@@ -1,24 +1,25 @@
-<Window xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:WebRadio.ViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="WebRadio.Views.ConfirmationView"
-        x:DataType="vm:ConfirmationViewModel"
-        Title="Confirm"
-        Width="400" Height="100"
-        WindowStartupLocation="CenterOwner"
-        CanResize="False"
-        ShowInTaskbar="False">
-    <Grid RowDefinitions="*,Auto" Margin="20">
-        <TextBlock Grid.Row="0" Text="{Binding Message}"
-                   TextWrapping="Wrap" VerticalAlignment="Center" />
+        x:DataType="vm:ConfirmationViewModel">
+    <Grid RowDefinitions="*,Auto">
+        <StackPanel Grid.Row="0" Orientation="Horizontal"
+                    HorizontalAlignment="Center" Spacing="10">
+            <Image Grid.Column="0" Width="32" Height="32" Source="avares://WebRadio/Assets/warning.png" />
+            <TextBlock Grid.Column="1"
+                       Text="{Binding Message}"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center" />
+        </StackPanel>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal"
-                    HorizontalAlignment="Right" Spacing="8">
-            <Button Content="Cancel" Command="{Binding Cancel}" />
+                    HorizontalAlignment="Left">
             <Button Content="OK" Command="{Binding Confirm}" />
+            <Button Content="Cancel" Command="{Binding Cancel}" />
         </StackPanel>
     </Grid>
-</Window>
+</UserControl>

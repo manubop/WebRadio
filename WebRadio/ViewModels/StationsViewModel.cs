@@ -21,7 +21,6 @@ namespace WebRadio.ViewModels
         private readonly ILogger _logger;
         private readonly ISongDownloaderFactory _songDownloaderFactory;
         private readonly IStationEditor _stationEditor;
-        private readonly IDialogService _dialogService;
 
         private ISongInfoDownloader? _downloader;
         private IRadioStream? _stream;
@@ -127,7 +126,7 @@ namespace WebRadio.ViewModels
         public IRelayCommand PlayPrevItemCommand { get; }
         public IRelayCommand PlayNextItemCommand { get; }
 
-        public StationsViewModel(IStationService service, IOptions options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory, IStationEditor stationEditor, IDialogService dialogService)
+        public StationsViewModel(IStationService service, IOptions options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory, IStationEditor stationEditor)
         {
             Model = [.. service.Load().Select(s => new StationModel(s))];
 
@@ -140,7 +139,6 @@ namespace WebRadio.ViewModels
             _logger = loggerFactory.CreateLogger<StationsViewModel>();
             _songDownloaderFactory = songDownloaderFactory;
             _stationEditor = stationEditor;
-            _dialogService = dialogService;
 
             MoveSelectedItemUpCommand = new RelayCommand(MoveSelectedItemUp, () => SelectedIndex > 0);
             MoveSelectedItemDownCommand = new RelayCommand(MoveSelectedItemDown, () => SelectedIndex < Model.Count - 1);
@@ -163,14 +161,9 @@ namespace WebRadio.ViewModels
             _stationEditor.EditItem(SelectedStation);
         }
 
-        public async void RemoveSelectedItem()
+        public void RemoveSelectedItem()
         {
-            var confirmed = await _dialogService.ShowConfirmationDialog("Delete selected item ?");
-
-            if (confirmed)
-            {
-                Model.RemoveAt(SelectedIndex);
-            }
+            _stationEditor.RemoveItem(SelectedIndex, "Delete selected item ?");
         }
 
         public void About()

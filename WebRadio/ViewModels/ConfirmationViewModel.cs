@@ -2,12 +2,12 @@
 
 namespace WebRadio.ViewModels
 {
-    public partial class ConfirmationViewModel(string message, Action confirm, Action cancel) : ViewModelBase
+    public partial class ConfirmationViewModel(string message, Action<bool> close) : ViewModelBase
     {
         public string Message => message;
 
-        public void Confirm() => confirm();
+        public void Confirm() => close(true);
 
-        public void Cancel() => cancel();
+        public void Cancel() => close(false);
     }
 }

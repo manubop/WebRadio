@@ -53,14 +53,11 @@ namespace WebRadio
                 var service = new StationsService(stationsFilename);
                 var options = new Options();
                 var songDownloaderFactory = new SongDownloaderFactory(loggerFactory);
-                var dialogService = new DialogService();
-                var vm = new MainWindowViewModel(service, options, loggerFactory, songDownloaderFactory, dialogService);
+                var vm = new MainWindowViewModel(service, options, loggerFactory, songDownloaderFactory);
                 var mw = new MainWindow
                 {
                     DataContext = vm,
                 };
-
-                dialogService.Parent = mw;
 
                 vm.Stations.PropertyChanged += (_, args) =>
                 {

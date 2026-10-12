@@ -12,6 +12,7 @@ namespace WebRadio.ViewModels
     {
         void AddItem();
         void EditItem(IStationModel current);
+        void RemoveItem(int index, string message);
         void About();
     }
 
@@ -19,9 +20,9 @@ namespace WebRadio.ViewModels
     {
         private ViewModelBase _contentViewModel;
 
-        public MainWindowViewModel(IStationService service, IOptions options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory, IDialogService dialogService)
+        public MainWindowViewModel(IStationService service, IOptions options, ILoggerFactory loggerFactory, ISongDownloaderFactory songDownloaderFactory)
         {
-            Stations = new(service, options, loggerFactory, songDownloaderFactory, this, dialogService);
+            Stations = new(service, options, loggerFactory, songDownloaderFactory, this);
 
             _contentViewModel = Stations;
         }
@@ -75,6 +76,19 @@ namespace WebRadio.ViewModels
                 Description = current.Description,
                 Api = current.Api,
             };
+        }
+
+        public void RemoveItem(int index, string message)
+        {
+            ContentViewModel = new ConfirmationViewModel(message, (confirmed) =>
+            {
+                if (confirmed)
+                {
+                    Stations.Model.RemoveAt(index);
+                }
+
+                ContentViewModel = Stations;
+            });
         }
 
         public void About()
